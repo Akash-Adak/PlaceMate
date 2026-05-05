@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Clock, Calendar, CheckCircle2, AlertTriangle, BookOpen, Link as LinkIcon, Sparkles, Target, TrendingUp, Award } from 'lucide-react';
+import { X, Clock, Calendar, CheckCircle2, AlertTriangle, BookOpen, Link as LinkIcon, Sparkles, Target, TrendingUp, Award, ChevronRight } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { mockCompanyPlan } from '../data/mockCompanyPlan';
 
@@ -55,7 +55,7 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
       : "border-indigo-600 border-t-transparent",
     
     loadingTitle: isDark
-      ? "text-3xl font-black uppercase italic tracking-tight mb-2"
+      ? "text-3xl font-black uppercase italic tracking-tight mb-2 text-white"
       : "text-3xl font-black uppercase italic tracking-tight mb-2 text-slate-800",
     
     loadingTitleAccent: isDark
@@ -104,8 +104,8 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
       : "relative w-full max-w-4xl max-h-[90vh] bg-white border border-indigo-100 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col",
     
     resultHeader: isDark
-      ? "flex-none p-8 border-b border-white/5"
-      : "flex-none p-8 border-b border-indigo-100",
+      ? "flex-none p-8 border-b border-white/5 relative overflow-hidden"
+      : "flex-none p-8 border-b border-indigo-100 relative overflow-hidden bg-gradient-to-r from-white to-indigo-50/30",
     
     resultCloseBtn: isDark
       ? "absolute top-6 right-6 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white z-10"
@@ -120,7 +120,7 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
       : "text-slate-500 text-xs font-bold uppercase tracking-widest flex items-center gap-2",
     
     resultTitle: isDark
-      ? "text-3xl font-black uppercase italic tracking-tight mb-2"
+      ? "text-3xl font-black uppercase italic tracking-tight mb-2 text-white"
       : "text-3xl font-black uppercase italic tracking-tight mb-2 text-slate-800",
     
     resultTitleAccent: isDark
@@ -137,8 +137,8 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
     
     // Stats Cards
     strengthCard: isDark
-      ? "bg-white/5 border border-white/5 rounded-2xl p-6"
-      : "bg-green-50 border border-green-100 rounded-2xl p-6",
+      ? "bg-white/5 border border-white/5 rounded-2xl p-6 hover:border-green-500/30 transition-all"
+      : "bg-green-50 border border-green-100 rounded-2xl p-6 hover:border-green-300 transition-all",
     
     strengthIcon: isDark
       ? "text-green-400"
@@ -153,8 +153,8 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
       : "text-xs text-slate-700 font-medium leading-relaxed",
     
     gapCard: isDark
-      ? "bg-amber-500/5 border border-amber-500/10 rounded-2xl p-6"
-      : "bg-amber-50 border border-amber-100 rounded-2xl p-6",
+      ? "bg-amber-500/5 border border-amber-500/10 rounded-2xl p-6 hover:border-orange-500/30 transition-all"
+      : "bg-amber-50 border border-amber-100 rounded-2xl p-6 hover:border-amber-300 transition-all",
     
     gapIcon: isDark
       ? "text-amber-500"
@@ -171,7 +171,7 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
     // Verdict Card
     verdictCard: isDark
       ? "bg-white/[0.02] border border-white/5 rounded-2xl p-6 mb-12"
-      : "bg-indigo-50/30 border border-indigo-100 rounded-2xl p-6 mb-12",
+      : "bg-gradient-to-br from-indigo-50/50 to-purple-50/50 border border-indigo-100 rounded-2xl p-6 mb-12",
     
     verdictLabel: isDark
       ? "text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1"
@@ -203,12 +203,12 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
       : "text-indigo-600",
     
     dayCard: isDark
-      ? "bg-[#111] border border-white/5 rounded-2xl overflow-hidden group hover:border-white/10 transition-colors"
-      : "bg-white border border-indigo-100 rounded-2xl overflow-hidden group hover:border-indigo-300 transition-colors shadow-sm",
+      ? "bg-[#111] border border-white/5 rounded-2xl overflow-hidden group hover:border-white/10 transition-all hover:shadow-xl"
+      : "bg-white border border-indigo-100 rounded-2xl overflow-hidden group hover:border-indigo-300 transition-all hover:shadow-xl",
     
     dayHeader: isDark
       ? "p-6 border-b border-white/5 bg-white/[0.01]"
-      : "p-6 border-b border-indigo-100 bg-indigo-50/20",
+      : "p-6 border-b border-indigo-100 bg-gradient-to-r from-white to-indigo-50/30",
     
     dayNumber: isDark
       ? "text-amber-500 font-black text-[10px] uppercase tracking-widest"
@@ -249,6 +249,10 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
     sessionLink: isDark
       ? "inline-flex items-center gap-1 text-[9px] font-black text-amber-500 uppercase tracking-wider hover:text-amber-400 transition-colors"
       : "inline-flex items-center gap-1 text-[9px] font-black text-indigo-600 uppercase tracking-wider hover:text-indigo-700 transition-colors",
+    
+    sessionWrapper: isDark
+      ? "flex gap-4 items-start p-3 rounded-xl hover:bg-white/5 transition-all"
+      : "flex gap-4 items-start p-3 rounded-xl hover:bg-indigo-50/50 transition-all",
   };
 
   if (isLoading) {
@@ -387,7 +391,12 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
           <div className={T.resultContent}>
             {/* Overview Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-              <div className={T.strengthCard}>
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className={T.strengthCard}
+              >
                 <div className={`flex items-center gap-3 mb-4 ${T.strengthIcon}`}>
                   <CheckCircle2 size={20} />
                   <h4 className={T.strengthTitle}>Strengths</h4>
@@ -397,8 +406,14 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
                     <li key={i} className={T.strengthText}>• {s}</li>
                   ))}
                 </ul>
-              </div>
-              <div className={T.gapCard}>
+              </motion.div>
+              
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className={T.gapCard}
+              >
                 <div className={`flex items-center gap-3 mb-4 ${T.gapIcon}`}>
                   <AlertTriangle size={20} />
                   <h4 className={T.gapTitle}>Key Gaps</h4>
@@ -408,11 +423,16 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
                     <li key={i} className={T.gapText}>• {g}</li>
                   ))}
                 </ul>
-              </div>
+              </motion.div>
             </div>
 
             {/* Verdict */}
-            <div className={T.verdictCard}>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className={T.verdictCard}
+            >
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h4 className={T.verdictLabel}>Final Verdict</h4>
@@ -427,17 +447,28 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
               <div className={T.verdictBadge}>
                 Target Apply Date: {plan.verdict.apply_after}
               </div>
-            </div>
+            </motion.div>
 
             {/* Daily Plan */}
-            <h3 className={T.planHeader}>
+            <motion.h3 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className={T.planHeader}
+            >
               <Calendar className={T.planIcon} />
               {plan.plan_length_days}-Day Roadmap
-            </h3>
+            </motion.h3>
             
             <div className="space-y-6">
-              {plan.days.map((day) => (
-                <div key={day.day_number} className={T.dayCard}>
+              {plan.days.map((day, idx) => (
+                <motion.div 
+                  key={day.day_number}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + idx * 0.1 }}
+                  className={T.dayCard}
+                >
                   <div className={T.dayHeader}>
                     <div className="flex items-center justify-between mb-2">
                       <span className={T.dayNumber}>Day {day.day_number}</span>
@@ -447,28 +478,35 @@ const CompanyPlanModal = ({ isOpen, onClose, companyName, isLoading = false }) =
                     <p className={T.dayTheme}>{day.theme}</p>
                   </div>
                   <div className={T.dayContent}>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {day.sessions.map((session, i) => (
-                        <div key={i} className="flex gap-4 items-start">
+                        <div key={i} className={T.sessionWrapper}>
                           <div className="w-20 shrink-0 text-right">
                             <span className={T.sessionBlock}>{session.block}</span>
                             <span className={T.sessionDuration}>{session.duration}</span>
                           </div>
                           <div className={T.sessionDivider} />
-                          <div>
+                          <div className="flex-1">
                             <p className={T.sessionFocus}>{session.focus}</p>
                             <a href={session.resource} target="_blank" rel="noreferrer" className={T.sessionLink}>
                               <BookOpen size={10} /> Study Material <LinkIcon size={10} />
                             </a>
                           </div>
+                          <ChevronRight size={14} className="opacity-30 group-hover:opacity-100 transition-opacity" />
                         </div>
                       ))}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
             
+            {/* Footer hint */}
+            <div className="mt-8 pt-4 text-center">
+              <p className={`text-[9px] ${isDark ? "text-slate-600" : "text-slate-400"} uppercase tracking-widest`}>
+                Complete each session to mark your progress
+              </p>
+            </div>
           </div>
         </motion.div>
       </div>
