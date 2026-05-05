@@ -1,150 +1,208 @@
 import React from "react";
-import { Mail, Linkedin, Twitter, Github, MapPin, Phone } from "lucide-react";
+import { Mail, Linkedin, Twitter, Github, MapPin, Phone, Heart, Globe, Shield, Sparkles } from "lucide-react";
+import { useTheme } from "../../context/ThemeContext";
 
-const FooterSection = () => (
-  <footer className="bg-black border-t border-white/8">
-    {/* Main Footer Content */}
-    <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16 lg:py-24">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-        {/* Brand Column */}
-        <div className="space-y-4">
-          <h3 className="text-xl font-black text-white tracking-tight">PlaceMate</h3>
-          <p className="text-sm text-slate-400 leading-relaxed">
-            AI-powered placement preparation for students and early-career professionals. Master interviews, land offers, succeed.
-          </p>
-          <div className="pt-4 flex items-center gap-4">
-            <a href="#" className="text-slate-500 hover:text-amber-500 transition-colors">
-              <Linkedin size={20} />
-            </a>
-            <a href="#" className="text-slate-500 hover:text-amber-500 transition-colors">
-              <Twitter size={20} />
-            </a>
-            <a href="#" className="text-slate-500 hover:text-amber-500 transition-colors">
-              <Github size={20} />
-            </a>
-            <a href="#" className="text-slate-500 hover:text-amber-500 transition-colors">
-              <Mail size={20} />
-            </a>
+const FooterSection = () => {
+  const { isDark } = useTheme();
+
+  /* ── theme tokens (matching hero + navbar) ────────────────────────────────── */
+  const T = {
+    footer: isDark
+      ? "bg-[#0a0a0f] border-t border-white/10"
+      : "bg-white border-t border-indigo-100",
+
+    heading: isDark
+      ? "text-white"
+      : "text-slate-800",
+
+    subheading: isDark
+      ? "text-slate-400"
+      : "text-slate-600",
+
+    secondaryText: isDark
+      ? "text-slate-500"
+      : "text-slate-500",
+
+    divider: isDark
+      ? "border-white/10"
+      : "border-indigo-100",
+
+    link: isDark
+      ? "text-slate-400 hover:text-amber-400 transition-colors"
+      : "text-slate-500 hover:text-indigo-600 transition-colors",
+
+    icon: isDark
+      ? "text-slate-500 group-hover:text-amber-400"
+      : "text-slate-400 group-hover:text-indigo-600",
+
+    accentBar: isDark
+      ? "bg-[#0f0f14] border-t border-white/5"
+      : "bg-indigo-50/50 border-t border-indigo-100",
+
+    accentText: isDark ? "text-slate-500" : "text-slate-500",
+  };
+
+  const footerLinks = {
+    product: [
+      { name: "Features", href: "#features" },
+      { name: "Pricing Plans", href: "/pricing" },
+      { name: "Roadmap", href: "/roadmap" },
+      { name: "Changelog", href: "/changelog" },
+    ],
+    company: [
+      { name: "About Us", href: "#about" },
+      { name: "Careers", href: "/careers" },
+      { name: "Press & Media", href: "/press" },
+      { name: "Contact", href: "/contact" },
+    ],
+    legal: [
+      { name: "Privacy Policy", href: "/privacy" },
+      { name: "Terms of Service", href: "/terms" },
+      { name: "Cookie Policy", href: "/cookies" },
+      { name: "Compliance", href: "/compliance" },
+    ],
+  };
+
+  const socialLinks = [
+    { icon: Linkedin, href: "https://linkedin.com/company/placemate", label: "LinkedIn" },
+    { icon: Twitter, href: "https://twitter.com/placemate", label: "Twitter" },
+    { icon: Github, href: "https://github.com/placemate", label: "GitHub" },
+    { icon: Mail, href: "mailto:placemate.support@gmail.com", label: "Email" },
+  ];
+
+  return (
+    <footer className={`transition-colors duration-300 ${T.footer}`}>
+      {/* Main Footer Content */}
+      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16 lg:py-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
+          {/* Brand Column */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-lg ${isDark ? "bg-amber-500/20" : "bg-gradient-to-br from-indigo-100 to-purple-100"} flex items-center justify-center`}>
+                <Sparkles size={16} className={isDark ? "text-amber-400" : "text-indigo-600"} />
+              </div>
+              <h3 className={`text-xl font-black tracking-tight ${T.heading}`}>
+                Place<span className={isDark ? "text-amber-400" : "text-indigo-600"}>Mate</span>
+              </h3>
+            </div>
+            <p className={`text-sm leading-relaxed ${T.subheading} max-w-sm`}>
+              AI-powered placement preparation for students and early-career professionals. 
+              Master interviews, land offers, succeed.
+            </p>
+            <div className="flex items-center gap-3 pt-2">
+              {socialLinks.map((social, idx) => (
+                <a
+                  key={idx}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`group p-2 rounded-xl transition-all duration-200 ${isDark ? "hover:bg-white/10" : "hover:bg-indigo-50"}`}
+                  aria-label={social.label}
+                >
+                  <social.icon size={18} className={`transition-colors duration-200 ${T.icon}`} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Product Column */}
+          <div className="space-y-4">
+            <h4 className={`text-xs font-black uppercase tracking-widest ${T.heading}`}>Product</h4>
+            <ul className="space-y-2.5 text-sm">
+              {footerLinks.product.map((link, idx) => (
+                <li key={idx}>
+                  <a href={link.href} className={T.link}>
+                    {link.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Company Column */}
+          <div className="space-y-4">
+            <h4 className={`text-xs font-black uppercase tracking-widest ${T.heading}`}>Company</h4>
+            <ul className="space-y-2.5 text-sm">
+              {footerLinks.company.map((link, idx) => (
+                <li key={idx}>
+                  <a href={link.href} className={T.link}>
+                    {link.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Legal Column */}
+          <div className="space-y-4">
+            <h4 className={`text-xs font-black uppercase tracking-widest ${T.heading}`}>Legal</h4>
+            <ul className="space-y-2.5 text-sm">
+              {footerLinks.legal.map((link, idx) => (
+                <li key={idx}>
+                  <a href={link.href} className={T.link}>
+                    {link.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        {/* Product Column */}
-        <div className="space-y-4">
-          <h4 className="text-sm font-bold text-white uppercase tracking-widest">Product</h4>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <a href="#features" className="text-slate-400 hover:text-amber-400 transition-colors">
-                Features
-              </a>
-            </li>
-            <li>
-              <a href="#" className="text-slate-400 hover:text-amber-400 transition-colors">
-                Pricing Plans
-              </a>
-            </li>
-            <li>
-              <a href="#" className="text-slate-400 hover:text-amber-400 transition-colors">
-                Roadmap
-              </a>
-            </li>
-            <li>
-              <a href="#" className="text-slate-400 hover:text-amber-400 transition-colors">
-                Updates & Blog
-              </a>
-            </li>
-          </ul>
+        {/* Contact Info Row */}
+        <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 py-6 mb-8 border-t ${T.divider}`}>
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl ${isDark ? "bg-white/5" : "bg-indigo-50"}`}>
+              <Mail size={16} className={isDark ? "text-amber-400" : "text-indigo-600"} />
+            </div>
+            <a href="mailto:placemate.support@gmail.com" className={`text-sm ${T.link}`}>
+              placemate.support@gmail.com
+            </a>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl ${isDark ? "bg-white/5" : "bg-indigo-50"}`}>
+              <Phone size={16} className={isDark ? "text-amber-400" : "text-indigo-600"} />
+            </div>
+            <a href="tel:+919876543210" className={`text-sm ${T.link}`}>
+              +91 98765 43210
+            </a>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl ${isDark ? "bg-white/5" : "bg-indigo-50"}`}>
+              <MapPin size={16} className={isDark ? "text-amber-400" : "text-indigo-600"} />
+            </div>
+            <span className={`text-sm ${T.subheading}`}>
+              HIT, Haldia, India
+            </span>
+          </div>
         </div>
 
-        {/* Company Column */}
-        <div className="space-y-4">
-          <h4 className="text-sm font-bold text-white uppercase tracking-widest">Company</h4>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <a href="#about" className="text-slate-400 hover:text-amber-400 transition-colors">
-                About Us
-              </a>
-            </li>
-            <li>
-              <a href="#" className="text-slate-400 hover:text-amber-400 transition-colors">
-                Careers
-              </a>
-            </li>
-            <li>
-              <a href="#" className="text-slate-400 hover:text-amber-400 transition-colors">
-                Press & Media
-              </a>
-            </li>
-            <li>
-              <a href="#" className="text-slate-400 hover:text-amber-400 transition-colors">
-                Contact
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        {/* Support Column */}
-        <div className="space-y-4">
-          <h4 className="text-sm font-bold text-white uppercase tracking-widest">Support</h4>
-          <ul className="space-y-3 text-sm">
-            <li className="flex items-start gap-2">
-              <Mail size={16} className="text-amber-500 mt-1 flex-shrink-0" />
-              <a href="mailto:placemate.support@gmail.com" className="text-slate-400 hover:text-amber-400 transition-colors">
-                placemate.support@gmail.com
-              </a>
-            </li>
-            <li className="flex items-start gap-2">
-              <Phone size={16} className="text-amber-500 mt-1 flex-shrink-0" />
-              <a href="tel:+919876543210" className="text-slate-400 hover:text-amber-400 transition-colors">
-                +91 98765 43210
-              </a>
-            </li>
-            <li className="flex items-start gap-2">
-              <MapPin size={16} className="text-amber-500 mt-1 flex-shrink-0" />
-              <span className="text-slate-400">
-                HIT, Haldia, India
-              </span>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Divider */}
-      <div className="border-t border-white/8" />
-
-      {/* Bottom Section */}
-      <div className="py-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-        {/* Legal Links */}
-        <div className="flex flex-wrap gap-4 md:gap-6 text-xs">
-          <a href="#" className="text-slate-500 hover:text-amber-400 transition-colors">
-            Privacy Policy
-          </a>
-          <a href="#" className="text-slate-500 hover:text-amber-400 transition-colors">
-            Terms of Service
-          </a>
-          <a href="#" className="text-slate-500 hover:text-amber-400 transition-colors">
-            Cookie Policy
-          </a>
-          <a href="#" className="text-slate-500 hover:text-amber-400 transition-colors">
-            Compliance
-          </a>
-        </div>
-
-        {/* Copyright */}
-        <div className="text-right">
-          <p className="text-xs text-slate-600">
-            © {new Date().getFullYear()} PlaceMate AI. All rights reserved. | v1.0.0
+        {/* Bottom Section */}
+        <div className={`pt-6 flex flex-col md:flex-row justify-between items-center gap-4 border-t ${T.divider}`}>
+          <div className="flex items-center gap-2 text-xs">
+            <Globe size={12} className={T.secondaryText} />
+            <span className={T.secondaryText}>English (International)</span>
+          </div>
+          
+          <p className={`text-xs ${T.secondaryText} flex items-center gap-1`}>
+            © {new Date().getFullYear()} PlaceMate AI. Made with{" "}
+            <Heart size={10} className="text-red-500 inline" /> for future engineers.
           </p>
+          
+          <div className="flex items-center gap-3 text-xs">
+            <Shield size={12} className={T.secondaryText} />
+            <span className={T.secondaryText}>v2.0.0</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    {/* Minimal top bar */}
-    <div className="bg-gradient-to-r from-amber-500/5 to-transparent border-t border-amber-500/10 px-6 lg:px-10 py-4">
-      <p className="text-xs text-slate-500 text-center max-w-4xl mx-auto">
-        PlaceMate is a product of PlaceMate AI Inc. We're committed to ethical AI and transparent practices in placement preparation.
-      </p>
-    </div>
-  </footer>
-);
+      {/* Bottom accent bar */}
+      <div className={`px-6 lg:px-10 py-4 border-t transition-colors duration-300 ${T.accentBar}`}>
+        <p className={`text-[11px] text-center max-w-4xl mx-auto ${T.accentText}`}>
+          PlaceMate is a product of PlaceMate AI Inc. We're committed to ethical AI and transparent practices in placement preparation.
+        </p>
+      </div>
+    </footer>
+  );
+};
 
 export default FooterSection;

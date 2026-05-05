@@ -22,7 +22,7 @@ const NavLink = ({ children, onClick, isDark }) => (
     {children}
     <span
       className={`absolute bottom-0 left-0 w-0 h-[2px] rounded-full group-hover:w-full transition-all duration-300 ${
-        isDark ? "bg-amber-400" : "bg-indigo-500"
+        isDark ? "bg-amber-400" : "bg-indigo-600"
       }`}
     />
   </button>
@@ -35,10 +35,10 @@ const DropdownItem = ({ icon: Icon, children, onClick, danger, isDark }) => (
       danger
         ? isDark
           ? "text-red-400 hover:bg-red-500/10 hover:text-red-300"
-          : "text-red-500 hover:bg-red-50 hover:text-red-600"
+          : "text-red-600 hover:bg-red-50 hover:text-red-700"
         : isDark
         ? "text-slate-300 hover:bg-white/[0.07] hover:text-amber-300"
-        : "text-slate-600 hover:bg-indigo-50 hover:text-indigo-700"
+        : "text-slate-700 hover:bg-indigo-50 hover:text-indigo-700"
     }`}
   >
     {Icon && <Icon size={15} className="flex-shrink-0 opacity-70" />}
@@ -92,44 +92,49 @@ const Navbar = () => {
 
   const displayName = user ? (user.displayName || user.email?.split("@")[0]) : "";
 
-  /* ── theme tokens ────────────────────────────────────────────────── */
-const T = {
-  nav: isDark 
-    ? "bg-[#0b0b0f]/80 border-white/[0.06] backdrop-blur-md"
-    : "bg-[#FAFAFB]/80 border-[#E6E8EC] backdrop-blur-md",
+  /* ── theme tokens (polished light theme + consistent dark) ────── */
+  const T = {
+    nav: isDark 
+      ? "bg-[#0b0b0f]/80 border-white/[0.06] backdrop-blur-md"
+      : "bg-white/80 border-gray-200/80 backdrop-blur-md shadow-sm",
 
-  card: isDark 
-    ? "bg-[#12121a] border-white/10 shadow-black/50"
-    : "bg-white border-[#E6E8EC] shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition",
+    card: isDark 
+      ? "bg-[#12121a] border-white/10 shadow-black/50"
+      : "bg-white border-gray-200 shadow-xl shadow-gray-200/50",
 
-  divider: isDark 
-    ? "bg-white/[0.06]" 
-    : "bg-[#EEF1F4]",
+    divider: isDark 
+      ? "bg-white/[0.06]" 
+      : "bg-gray-200",
 
-  accent: isDark 
-    ? "text-amber-400" 
-    : "text-blue-600",
+    accent: isDark 
+      ? "text-amber-400" 
+      : "text-indigo-600",
 
-  pill: isDark 
-    ? "bg-amber-500 hover:bg-amber-400 text-black"
-    : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm",
+    pill: isDark 
+      ? "bg-amber-500 hover:bg-amber-400 text-black"
+      : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm",
 
-  chipBg: isDark 
-    ? "bg-white/[0.06] hover:bg-white/[0.12] border-white/10 text-amber-300"
-    : "bg-[#F1F5F9] hover:bg-blue-50 border-[#E2E8F0] text-blue-600",
+    chipBg: isDark 
+      ? "bg-white/[0.06] hover:bg-white/[0.12] border-white/10 text-amber-300"
+      : "bg-gray-100 hover:bg-indigo-50 border-gray-200 text-indigo-700",
 
-  iconBtn: isDark 
-    ? "bg-white/[0.06] hover:bg-white/[0.12] border-white/10 text-amber-300"
-    : "bg-[#F8FAFC] hover:bg-blue-50 border-[#E2E8F0] text-blue-600",
+    iconBtn: isDark 
+      ? "bg-white/[0.06] hover:bg-white/[0.12] border-white/10 text-amber-300"
+      : "bg-gray-100 hover:bg-indigo-50 border-gray-200 text-indigo-600",
 
-  menuBtn: isDark 
-    ? "bg-white/[0.05] hover:bg-white/[0.10] border-white/10 text-slate-300 hover:text-amber-400"
-    : "bg-[#F8FAFC] hover:bg-blue-50 border-[#E2E8F0] text-slate-600 hover:text-blue-600",
+    menuBtn: isDark 
+      ? "bg-white/[0.05] hover:bg-white/[0.10] border-white/10 text-slate-300 hover:text-amber-400"
+      : "bg-gray-100 hover:bg-indigo-50 border-gray-200 text-slate-700 hover:text-indigo-600",
 
-  name: isDark 
-    ? "text-amber-400" 
-    : "text-blue-600",
-};
+    name: isDark 
+      ? "text-amber-400" 
+      : "text-indigo-600",
+
+    mobileItem: isDark
+      ? "text-slate-300 hover:text-amber-400 hover:bg-white/[0.07]"
+      : "text-slate-700 hover:text-indigo-600 hover:bg-indigo-50/60"
+  };
+
   /* ════════════════════════════════════════════════════════════════ */
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 h-[68px] flex items-center backdrop-blur-2xl border-b transition-colors duration-300 ${T.nav}`}>
@@ -145,7 +150,7 @@ const T = {
             <div className="relative">
               <img src={logo} alt="PlaceMate" className="h-9 w-9 object-contain rounded-lg group-hover:scale-110 transition-transform duration-200" />
             </div>
-            <span className={`text-[1.55rem] font-black tracking-tight leading-none ${isDark ? "text-white" : "text-slate-900"}`}>
+            <span className={`text-[1.55rem] font-black tracking-tight leading-none ${isDark ? "text-white" : "text-slate-800"}`}>
               Place<span className={T.accent}>Mate</span>
             </span>
           </motion.div>
@@ -228,7 +233,7 @@ const T = {
                 <motion.button
                   whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   onClick={() => setProfileOpen((v) => !v)}
-                  className={`flex items-center gap-1 p-1 rounded-full transition-all duration-200 ${isDark ? "hover:bg-white/10" : "hover:bg-slate-100"}`}
+                  className={`flex items-center gap-1 p-1 rounded-full transition-all duration-200 ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"}`}
                   aria-label="Profile menu"
                 >
                   <UserCircle size={30} className={T.accent} />
@@ -312,7 +317,7 @@ const T = {
                       { label: "Features", icon: Star, action: () => scrollTo("features") },
                       { label: "About", icon: Info, action: () => scrollTo("about") },
                     ].map(({ label, icon: Icon, action }) => (
-                      <button key={label} onClick={action} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${isDark ? "text-slate-300 hover:text-amber-400 hover:bg-white/[0.07]" : "text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"}`}>
+                      <button key={label} onClick={action} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${T.mobileItem}`}>
                         <Icon size={15} className="opacity-60" /> {label}
                       </button>
                     ))}
@@ -321,17 +326,17 @@ const T = {
 
                     {!user ? (
                       <>
-                        <button onClick={() => { setMobileOpen(false); navigate("/login"); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${isDark ? "text-slate-300 hover:text-amber-400 hover:bg-white/[0.07]" : "text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"}`}>Sign In</button>
+                        <button onClick={() => { setMobileOpen(false); navigate("/login"); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${T.mobileItem}`}>Sign In</button>
                         <button onClick={() => { setMobileOpen(false); navigate("/register"); }} className={`w-full px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${T.pill}`}>Get Started →</button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => go("/mock-interview")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${isDark ? "text-slate-300 hover:text-amber-400 hover:bg-white/[0.07]" : "text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"}`}><Mic size={15} className="opacity-60" /> Mock Interview</button>
-                        <button onClick={() => go("/resume-parsing")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${isDark ? "text-slate-300 hover:text-amber-400 hover:bg-white/[0.07]" : "text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"}`}><FileText size={15} className="opacity-60" /> Resume Parsing</button>
-                        <button onClick={() => go("/dashboard")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${isDark ? "text-slate-300 hover:text-amber-400 hover:bg-white/[0.07]" : "text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"}`}><LayoutDashboard size={15} className="opacity-60" /> Dashboard</button>
-                        <button onClick={() => go("/pricing")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${isDark ? "text-slate-300 hover:text-amber-400 hover:bg-white/[0.07]" : "text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"}`}><CreditCard size={15} className="opacity-60" /> Pricing & Plans</button>
+                        <button onClick={() => go("/mock-interview")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${T.mobileItem}`}><Mic size={15} className="opacity-60" /> Mock Interview</button>
+                        <button onClick={() => go("/resume-parsing")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${T.mobileItem}`}><FileText size={15} className="opacity-60" /> Resume Parsing</button>
+                        <button onClick={() => go("/dashboard")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${T.mobileItem}`}><LayoutDashboard size={15} className="opacity-60" /> Dashboard</button>
+                        <button onClick={() => go("/pricing")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${T.mobileItem}`}><CreditCard size={15} className="opacity-60" /> Pricing & Plans</button>
                         <div className={`my-2 h-px mx-1 rounded-full ${T.divider}`} />
-                        <button onClick={() => { setMobileOpen(false); logout(); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${isDark ? "text-red-400 hover:bg-red-500/10 hover:text-red-300" : "text-red-500 hover:bg-red-50 hover:text-red-600"}`}><LogOut size={15} /> Logout</button>
+                        <button onClick={() => { setMobileOpen(false); logout(); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${isDark ? "text-red-400 hover:bg-red-500/10 hover:text-red-300" : "text-red-600 hover:bg-red-50 hover:text-red-700"}`}><LogOut size={15} /> Logout</button>
                       </>
                     )}
                   </div>
