@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bot, Send, X, Sparkles } from "lucide-react";
+import { Bot, Send, X, Sparkles, MessageCircle, Zap, HelpCircle, Loader2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 import { getGeminiAssistantReply } from "../services/geminiAssistant";
 
 const quickPrompts = [
@@ -14,10 +15,11 @@ const quickPrompts = [
 const createWelcomeMessage = (pathname) => ({
   id: "welcome",
   role: "assistant",
-  content: `Hi, I’m your PlaceMate assistant. I can guide you on ${pathname === "/" ? "resume prep, interview practice, and company planning" : "the current page and next step"}. Type a question and I’ll help.`,
+  content: `Hi, I'm your PlaceMate assistant. I can guide you on ${pathname === "/" ? "resume prep, interview practice, and company planning" : "the current page and next step"}. Type a question and I'll help.`,
 });
 
 const VoiceAssistant = () => {
+  const { isDark } = useTheme();
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([createWelcomeMessage(location.pathname)]);
@@ -75,99 +77,201 @@ const VoiceAssistant = () => {
 
   const handleQuickPrompt = (prompt) => {
     setInput(prompt);
+    // Optional: auto-send after a short delay
+    // setTimeout(() => sendMessage(prompt), 100);
+  };
+
+  /* ── Theme tokens ────────────────────────────────────────────── */
+  const T = {
+    toggleButton: isDark
+      ? "fixed bottom-6 right-6 z-[90] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-[0_0_40px_rgba(245,158,11,0.35)] transition-all hover:scale-105 active:scale-95"
+      : "fixed bottom-6 right-6 z-[90] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-[0_0_40px_rgba(99,102,241,0.35)] transition-all hover:scale-105 active:scale-95",
+    
+    container: isDark
+      ? "fixed bottom-24 right-6 z-[90] w-[min(92vw,24rem)] overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a]/95 shadow-2xl backdrop-blur-xl"
+      : "fixed bottom-24 right-6 z-[90] w-[min(92vw,24rem)] overflow-hidden rounded-2xl border border-indigo-100 bg-white/95 shadow-2xl backdrop-blur-xl",
+    
+    header: isDark
+      ? "flex items-center justify-between border-b border-white/10 px-4 py-4"
+      : "flex items-center justify-between border-b border-indigo-100 px-4 py-4",
+    
+    headerBadge: isDark
+      ? "flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.35em] text-amber-500"
+      : "flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.35em] text-indigo-600",
+    
+    headerSubtext: isDark
+      ? "mt-1 text-[11px] text-slate-500"
+      : "mt-1 text-[11px] text-slate-500",
+    
+    closeButton: isDark
+      ? "text-slate-500 transition-colors hover:text-white"
+      : "text-slate-400 transition-colors hover:text-indigo-600",
+    
+    messageList: isDark
+      ? "max-h-[28rem] space-y-3 overflow-y-auto px-4 py-4 custom-scrollbar"
+      : "max-h-[28rem] space-y-3 overflow-y-auto px-4 py-4 custom-scrollbar",
+    
+    assistantMessage: isDark
+      ? "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed bg-white/5 text-slate-100"
+      : "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed bg-indigo-50 text-slate-700",
+    
+    userMessage: isDark
+      ? "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed bg-gradient-to-r from-amber-500 to-orange-500 text-black"
+      : "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed bg-gradient-to-r from-indigo-600 to-purple-600 text-white",
+    
+    quickPromptsContainer: isDark
+      ? "mb-3 flex flex-wrap gap-2"
+      : "mb-3 flex flex-wrap gap-2",
+    
+    quickPromptButton: isDark
+      ? "rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300 transition-all hover:border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-400"
+      : "rounded-full border border-indigo-200 bg-indigo-50 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-indigo-600 transition-all hover:border-indigo-400 hover:bg-indigo-100 hover:text-indigo-700",
+    
+    inputContainer: isDark
+      ? "flex items-center gap-2 rounded-xl border border-white/10 bg-black/50 px-3 py-2"
+      : "flex items-center gap-2 rounded-xl border border-indigo-200 bg-white px-3 py-2 shadow-sm",
+    
+    input: isDark
+      ? "min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
+      : "min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400",
+    
+    sendButton: isDark
+      ? "flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-black transition-all hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
+      : "flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white transition-all hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60",
+    
+    footer: isDark
+      ? "mt-3 flex items-center justify-between text-[10px] uppercase tracking-[0.25em] text-slate-500"
+      : "mt-3 flex items-center justify-between text-[10px] uppercase tracking-[0.25em] text-slate-400",
+    
+    errorText: isDark
+      ? "mt-3 text-xs text-red-400"
+      : "mt-3 text-xs text-red-500",
+    
+    typingIndicator: isDark
+      ? "flex items-center gap-1 text-xs text-slate-500"
+      : "flex items-center gap-1 text-xs text-slate-400",
   };
 
   return (
     <>
-      <button
+      <motion.button
         onClick={() => setOpen((prev) => !prev)}
-        className="fixed bottom-6 right-6 z-[90] flex h-16 w-16 items-center justify-center rounded-full bg-amber-500 text-black shadow-[0_0_40px_rgba(245,158,11,0.35)] transition-transform hover:scale-105 active:scale-95"
+        className={T.toggleButton}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         aria-label="Open voice assistant"
       >
-        <Bot size={28} />
-      </button>
+        {open ? <X size={24} /> : <MessageCircle size={24} />}
+      </motion.button>
 
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.96 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-6 z-[90] w-[min(92vw,24rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#080808]/95 shadow-2xl backdrop-blur-xl"
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className={T.container}
           >
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+            <div className={T.header}>
               <div>
-                <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.35em] text-amber-500">
-                  <Sparkles size={12} /> Chat Assistant
-                </p>
-                <p className="mt-1 text-[11px] text-slate-400">Gemini-powered text chat</p>
+                <div className="flex items-center gap-2">
+                  <Sparkles size={12} className={isDark ? "text-amber-500" : "text-indigo-600"} />
+                  <p className={T.headerBadge}>
+                    AI Assistant
+                  </p>
+                </div>
+                <p className={T.headerSubtext}>Gemini-powered • Always here to help</p>
               </div>
-              <button onClick={() => setOpen(false)} className="text-slate-400 transition-colors hover:text-white" aria-label="Close voice assistant">
+              <button 
+                onClick={() => setOpen(false)} 
+                className={T.closeButton}
+                aria-label="Close voice assistant"
+              >
                 <X size={18} />
               </button>
             </div>
 
-            <div ref={messageListRef} className="max-h-[26rem] space-y-4 overflow-y-auto px-4 py-4">
-              {messages.map((message) => (
-                <div
+            <div ref={messageListRef} className={T.messageList}>
+              {messages.map((message, idx) => (
+                <motion.div
                   key={message.id}
+                  initial={{ opacity: 0, x: message.role === "assistant" ? -10 : 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2, delay: idx * 0.05 }}
                   className={`flex ${message.role === "assistant" ? "justify-start" : "justify-end"}`}
                 >
-                  <div
-                    className={`max-w-[85%] rounded-3xl px-4 py-3 text-sm leading-relaxed ${
-                      message.role === "assistant"
-                        ? "bg-white/5 text-slate-100"
-                        : "bg-amber-500 text-black"
-                    }`}
-                  >
+                  <div className={message.role === "assistant" ? T.assistantMessage : T.userMessage}>
                     {message.content}
                   </div>
-                </div>
+                </motion.div>
               ))}
+              {isSending && (
+                <div className="flex justify-start">
+                  <div className="flex items-center gap-2 rounded-2xl bg-white/5 px-4 py-3">
+                    <Loader2 size={14} className="animate-spin text-amber-500" />
+                    <span className="text-xs text-slate-400">AI is thinking...</span>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="border-t border-white/10 px-4 py-4">
-              <div className="mb-3 flex flex-wrap gap-2">
+            <div className="border-t border-indigo-100 px-4 py-4">
+              <div className={T.quickPromptsContainer}>
                 {quickPrompts.map((prompt) => (
                   <button
                     key={prompt}
                     onClick={() => handleQuickPrompt(prompt)}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300 transition-colors hover:border-amber-500/30 hover:text-amber-400"
+                    className={T.quickPromptButton}
                   >
                     {prompt}
                   </button>
                 ))}
               </div>
 
-              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black px-3 py-2">
+              <div className={T.inputContainer}>
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
                       void sendMessage();
                     }
                   }}
                   placeholder="Ask me anything about your prep flow..."
-                  className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
+                  className={T.input}
                 />
                 <button
                   onClick={() => void sendMessage()}
-                  disabled={isSending}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500 text-black transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={isSending || !input.trim()}
+                  className={T.sendButton}
                   aria-label="Send message"
                 >
-                  <Send size={16} />
+                  {isSending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                 </button>
               </div>
 
-              <div className="mt-3 flex items-center justify-between text-[10px] uppercase tracking-[0.25em] text-slate-500">
-                <span>{isSending ? "Thinking..." : "Ready"}</span>
-                <span>Text only</span>
+              <div className={T.footer}>
+                <span className="flex items-center gap-1">
+                  <Zap size={10} />
+                  {isSending ? "Thinking..." : "Ready"}
+                </span>
+                <span className="flex items-center gap-1">
+                  <HelpCircle size={10} />
+                  Text chat
+                </span>
               </div>
 
-              {error ? <p className="mt-3 text-xs text-red-400">{error}</p> : null}
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className={T.errorText}
+                >
+                  {error}
+                </motion.p>
+              )}
             </div>
           </motion.div>
         )}
