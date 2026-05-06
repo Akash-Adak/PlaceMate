@@ -114,8 +114,8 @@ const Dashboard = () => {
       : "text-indigo-600 font-bold uppercase tracking-[0.2em] text-[10px] break-all",
     
     toggleButton: isDark
-      ? "hidden xl:flex items-center gap-3 px-5 py-3 bg-black border border-amber-500/30 rounded-2xl hover:border-amber-500/60 transition-all group self-start"
-      : "hidden xl:flex items-center gap-3 px-5 py-3 bg-white border border-indigo-200 rounded-2xl hover:border-indigo-400 transition-all group self-start shadow-sm",
+      ? "hidden lg:flex items-center gap-3 px-5 py-3 bg-black border border-amber-500/30 rounded-2xl hover:border-amber-500/60 transition-all group self-start"
+      : "hidden lg:flex items-center gap-3 px-5 py-3 bg-white border border-indigo-200 rounded-2xl hover:border-indigo-400 transition-all group self-start shadow-sm",
     
     toggleText: isDark
       ? "text-[10px] font-black uppercase tracking-widest text-amber-500 group-hover:text-amber-400"
@@ -204,6 +204,14 @@ const Dashboard = () => {
     dayValue: isDark
       ? "text-[9px] font-bold text-slate-600"
       : "text-[9px] font-bold text-slate-500",
+      
+    barTrack: isDark
+      ? "flex-1 h-3 bg-white/5 rounded-full overflow-hidden"
+      : "flex-1 h-3 bg-indigo-50 rounded-full overflow-hidden border border-indigo-100",
+      
+    barFill: isDark
+      ? "h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full"
+      : "h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full",
     
     skillName: isDark
       ? "text-[10px] font-bold text-slate-400"
@@ -214,8 +222,8 @@ const Dashboard = () => {
       : "text-[9px] font-black text-slate-400",
     
     companyCard: isDark
-      ? "bg-[#0a0a0a] border border-white/5 rounded-2xl p-5 sm:p-6 hover:border-amber-500/30 transition-all"
-      : "bg-white border border-indigo-100 rounded-2xl p-5 sm:p-6 hover:border-indigo-300 transition-all shadow-sm hover:shadow-md",
+      ? "bg-[#0a0a0a] border border-white/5 rounded-2xl p-5 sm:p-6 hover:border-amber-500/30 transition-all flex flex-col h-full"
+      : "bg-white border border-indigo-100 rounded-2xl p-5 sm:p-6 hover:border-indigo-300 transition-all shadow-sm hover:shadow-md flex flex-col h-full",
     
     companyName: isDark
       ? "text-base sm:text-lg font-black uppercase italic truncate text-white"
@@ -234,12 +242,28 @@ const Dashboard = () => {
       : "text-[9px] text-slate-400 font-bold",
     
     matchReason: isDark
-      ? "text-slate-400 text-xs mb-4 leading-relaxed"
-      : "text-slate-500 text-xs mb-4 leading-relaxed",
+      ? "text-slate-400 text-xs mb-4 leading-relaxed flex-1"
+      : "text-slate-500 text-xs mb-4 leading-relaxed flex-1",
     
     planButton: isDark
       ? "w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest text-[9px] rounded-lg transition-all flex items-center justify-center gap-2 active:scale-95"
       : "w-full py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black uppercase tracking-widest text-[9px] rounded-lg transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm",
+      
+    heatmapAvatar: isDark
+      ? "w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-xs font-black text-black"
+      : "w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-xs font-black text-white",
+      
+    heatmapName: isDark
+      ? "text-sm font-black uppercase truncate text-white"
+      : "text-sm font-black uppercase truncate text-slate-800",
+      
+    heatmapLocation: isDark
+      ? "text-[9px] text-slate-400 font-bold truncate"
+      : "text-[9px] text-slate-500 font-bold truncate",
+      
+    heatmapScoreText: isDark
+      ? "text-lg font-black text-amber-500"
+      : "text-lg font-black text-indigo-600",
     
     viewAllButton: isDark
       ? "w-full mt-8 py-3 border border-amber-500/30 hover:border-amber-500/60 hover:bg-amber-500/10 text-amber-500 font-bold uppercase tracking-widest text-[10px] rounded-lg transition-all flex items-center justify-center gap-2"
@@ -320,10 +344,10 @@ const Dashboard = () => {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           
-          <div className={`${sidebarOpen ? 'xl:col-span-8' : 'xl:col-span-12'} space-y-6 lg:space-y-8 transition-all duration-500 min-w-0`}>
-            <div className="xl:hidden mb-2">
+          <div className={`${sidebarOpen ? 'lg:col-span-8' : 'lg:col-span-12'} transition-all duration-500 min-w-0`}>
+            <div className="lg:hidden mb-6">
               <button
                 onClick={() => setSidebarOpen((prev) => !prev)}
                 className={T.mobileToggle}
@@ -336,7 +360,8 @@ const Dashboard = () => {
               </button>
             </div>
             
-            {loading ? (
+            <div className="space-y-6 lg:space-y-8">
+              {loading ? (
               <div className={T.loadingCard}>
                 <div className={T.loadingSpinner} />
                 <p className={T.loadingText}>Loading Analytics...</p>
@@ -369,7 +394,7 @@ const Dashboard = () => {
               ) : (
                 <>
                   {/* Key Metrics Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
                       { label: 'Job Readiness', value: `${analytics?.jobReadiness ?? 0}%`, icon: Briefcase, color: 'from-indigo-500 to-purple-600', change: 'From company matches' },
                       { label: 'Daily Prep', value: `${dailyPrepProgress}%`, icon: TrendingUp, color: 'from-green-500 to-emerald-600', change: `${quizProgress.completed}/${quizProgress.total} answered • ${momentumScore}% momentum` },
@@ -396,7 +421,7 @@ const Dashboard = () => {
                   </div>
 
                   {/* Progress Chart & Skills Heatmap */}
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Improvement Graph */}
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
@@ -416,19 +441,18 @@ const Dashboard = () => {
                         <div className="space-y-3 sm:space-y-4">
                           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => {
                             const value = progressTrend[idx] || 0;
-                            const height = Math.max(18, value * 1.25);
                             return (
-                              <div key={idx} className="flex items-end gap-2 sm:gap-3">
-                                <span className={T.dayLabel}>{day}</span>
-                                <div className="flex-1 flex items-end gap-1">
+                              <div key={idx} className="flex items-center gap-3 sm:gap-4">
+                                <span className={`${T.dayLabel} w-6 text-right`}>{day}</span>
+                                <div className={T.barTrack}>
                                   <motion.div
-                                    initial={{ height: 0 }}
-                                    animate={{ height: `${height}px` }}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${value}%` }}
                                     transition={{ delay: 0.3 + idx * 0.1, duration: 0.6 }}
-                                    className="flex-1 bg-gradient-to-t from-indigo-500 to-purple-500 rounded-sm"
+                                    className={T.barFill}
                                   />
                                 </div>
-                                <span className={T.dayValue}>{value}%</span>
+                                <span className={`${T.dayValue} w-8 text-right`}>{value}%</span>
                               </div>
                             );
                           })}
@@ -510,30 +534,26 @@ const Dashboard = () => {
                         <div key={idx}>
                           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-3">
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-black text-white">
+                              <div className={T.heatmapAvatar}>
                                 {company.name.charAt(0)}
                               </div>
                               <div className="min-w-0">
-                                <p className="text-sm font-black uppercase truncate text-slate-800">{company.name}</p>
-                                <p className="text-[9px] text-slate-500 font-bold truncate">{company.location}</p>
+                                <p className={T.heatmapName}>{company.name}</p>
+                                <p className={T.heatmapLocation}>{company.location}</p>
                               </div>
                             </div>
                             <div className="text-left sm:text-right">
-                              <p className="text-lg font-black text-indigo-600">{company.matchScore}%</p>
+                              <p className={T.heatmapScoreText}>{company.matchScore}%</p>
                               <p className="text-[9px] text-slate-500 font-bold">Match Score</p>
                             </div>
                           </div>
                           
-                          <div className="h-3 bg-indigo-100 rounded-full overflow-hidden">
+                          <div className={T.barTrack}>
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.min(100, company.matchScore)}%` }}
                               transition={{ delay: 0.5 + idx * 0.1, duration: 0.8 }}
-                              className={`h-full rounded-full ${
-                                company.matchScore >= 80 ? 'bg-gradient-to-r from-green-500 to-emerald-600' :
-                                company.matchScore >= 60 ? 'bg-gradient-to-r from-indigo-500 to-purple-600' :
-                                'bg-gradient-to-r from-orange-500 to-red-500'
-                              }`}
+                              className={T.barFill}
                             />
                           </div>
                         </div>
@@ -563,7 +583,7 @@ const Dashboard = () => {
                       <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-[0.2em] border border-indigo-200">{parsedData.companies?.length || 0} Active</span>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
                       {parsedData.companies?.map((company, i) => (
                         <motion.div
                           key={i}
@@ -607,8 +627,9 @@ const Dashboard = () => {
                   </motion.div>
                 </>
               )}
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
 
           {/* Sidebar / Advanced Analytics */}
@@ -618,7 +639,7 @@ const Dashboard = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="xl:col-span-4 space-y-6 lg:space-y-8"
+                className="lg:col-span-4 space-y-6 lg:space-y-8"
               >
                 {/* Weekly Goals */}
                 <motion.div 
