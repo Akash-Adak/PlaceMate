@@ -345,7 +345,7 @@ const ResumeParsing = () => {
     <div className={T.pageBg}>
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-8 pt-32 pb-12">
+      <main className="w-full max-w-[1600px] mx-auto px-6 sm:px-12 lg:px-20 pt-32 pb-12">
         <button 
           onClick={() => navigate('/dashboard')}
           className={T.backButton}
@@ -367,7 +367,7 @@ const ResumeParsing = () => {
           </motion.div>
         </header>
 
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
           {isLoadingPersistent ? (
              <div className={T.loadingContainer}>
                 <div className={T.loadingSpinner} />
@@ -382,14 +382,14 @@ const ResumeParsing = () => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.1 }}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10"
                 >
                   <div 
                     onClick={() => setOnboardingMode('upload')}
                     className={T.choiceCard(true)}
                   >
                     <div className="absolute -right-8 -bottom-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity">
-                       <FileText size={160} />
+                       <FileText size={240} />
                     </div>
                     <div className={T.choiceIconBg(true)}>
                       <Upload className={isDark ? "text-amber-500" : "text-indigo-600"} size={28} />
@@ -403,7 +403,7 @@ const ResumeParsing = () => {
                     className={T.choiceCard(false)}
                   >
                     <div className="absolute -right-8 -bottom-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity">
-                       <TrendingUp size={160} />
+                       <TrendingUp size={240} />
                     </div>
                     <div className={T.choiceIconBg(false)}>
                       <TrendingUp className={isDark ? "text-amber-500" : "text-indigo-600"} size={28} />
@@ -444,20 +444,20 @@ const ResumeParsing = () => {
                       <div className={T.uploadButton}>
                         {isUploading ? (
                           <>
-                            <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                            <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
                             Processing Resume...
                           </>
                         ) : (
                           <>
                             Upload Your PDF
-                            <ArrowRight size={16} />
+                            <ArrowRight size={20} />
                           </>
                         )}
                       </div>
                     </label>
                     <p className={T.uploadHint}>Supports PDF, DOCX (Max 10MB)</p>
 
-                    <div className="w-full mt-10 max-w-2xl">
+                    <div className="w-full mt-12">
                       <ResumePanel parsedData={parsedData} isLoading={isUploading} />
                     </div>
                   </div>

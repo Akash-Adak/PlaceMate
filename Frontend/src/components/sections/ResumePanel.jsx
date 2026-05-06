@@ -4,11 +4,11 @@ import { FileText, Sparkles, Brain, CheckCircle, Clock, Target, Code, Award, Tre
 import { useTheme } from '../../context/ThemeContext';
 
 const loadingMessages = [
-  'Scanning summary, skills, projects, and experience from your resume.',
-  'Extracting role signals, keywords, and proof points from each section.',
-  'Building your skill profile and comparing it with company expectations.',
-  'Ranking the best-fit companies based on match strength and readiness.',
-  'Preparing the final company shortlist and prep roadmap.'
+  "Scanning summary, skills, projects, and experience from your resume.",
+  "Extracting role signals, keywords, and proof points from each section.",
+  "Building your skill profile and comparing it with company expectations.",
+  "Ranking the best-fit companies based on match strength and readiness.",
+  "Preparing the final company shortlist and prep roadmap.",
 ];
 
 const loadingSteps = [
@@ -28,7 +28,9 @@ const ResumePanel = ({ parsedData, isLoading = false }) => {
     if (!isLoading) return;
 
     const timer = window.setInterval(() => {
-      setLoadingStep((currentStep) => (currentStep + 1) % loadingMessages.length);
+      setLoadingStep(
+        (currentStep) => (currentStep + 1) % loadingMessages.length,
+      );
     }, 1400);
 
     return () => window.clearInterval(timer);
@@ -170,7 +172,14 @@ const ResumePanel = ({ parsedData, isLoading = false }) => {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
-            {['Summary', 'Skills', 'Experience', 'Projects', 'Companies', 'Plan'].map((label, index) => {
+            {[
+              "Summary",
+              "Skills",
+              "Experience",
+              "Projects",
+              "Companies",
+              "Plan",
+            ].map((label, index) => {
               const active = index <= loadingStep % 3;
               return (
                 <div key={label} className={`rounded-xl border p-3 transition-colors ${T.loadingCardBorder(active)}`}>
@@ -180,7 +189,7 @@ const ResumePanel = ({ parsedData, isLoading = false }) => {
                   <div className={`h-1.5 rounded-full overflow-hidden ${T.loadingCardBarBg(active)}`}>
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: active ? '100%' : '20%' }}
+                      animate={{ width: active ? "100%" : "20%" }}
                       transition={{ duration: 0.5 }}
                       className={`h-full rounded-full ${T.loadingCardBarFill}`}
                     />

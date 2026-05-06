@@ -1,16 +1,12 @@
 name: Version Release
-
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
-
   # -------------------------------
   # JOB 1: GENERATE VERSION
   # -------------------------------
@@ -18,48 +14,53 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.set_version.outputs.version }}
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Get latest tag
         id: get_tag
         run: |
           git fetch --tags
           TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
           echo "Latest tag: $TAG"
-
       - name: Increment version (clean)
         id: set_version
         run: |
           git fetch --tags
-          
+
           VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
           VERSION=${VERSION#v}
-          
+
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-          
+
           while true; do
             PATCH=$((PATCH+1))
+
+            if [ "$PATCH" -gt 9 ]; then
+              PATCH=0
+              MINOR=$((MINOR+1))
+            fi
+
+            if [ "$MINOR" -gt 9 ]; then
+              MINOR=0
+              MAJOR=$((MAJOR+1))
+            fi
+
             NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
-          
+
             if git rev-parse "$NEW_VERSION" >/dev/null 2>&1; then
               echo "Version $NEW_VERSION exists, incrementing..."
             else
               break
             fi
           done
-          
+
           echo "Final version: $NEW_VERSION"
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
       - name: Create Git Tag (safe)
         id: create_tag
         run: |
           VERSION=${{ steps.set_version.outputs.version }}
-
           git fetch --tags
-
           if git rev-parse "$VERSION" >/dev/null 2>&1; then
             echo "Tag already exists: $VERSION"
             echo "created=false" >> $GITHUB_OUTPUT
@@ -78,7 +79,7 @@ jobs:
           name: Release ${{ steps.set_version.outputs.version }}
           body: |
             🚀 Automated Release
-        
+
             🔖 Version: ${{ steps.set_version.outputs.version }}
             👤 Author: ${{ github.actor }}
             🧾 Commit: ${{ github.sha }}
