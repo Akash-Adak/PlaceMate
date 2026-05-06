@@ -109,7 +109,7 @@ const Counter = ({ to, suffix = "" }) => {
 };
 
 // ─── Particle Field ──────────────────────────────────────────────────────────
-const ParticleField = ({ isDark }) => {
+const ParticleField = ({ colorClass }) => {
   const canvasRef = React.useRef(null);
 
   useEffect(() => {
@@ -117,38 +117,41 @@ const ParticleField = ({ isDark }) => {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     let animationFrameId;
+    let particles = [];
+    let mouse = { x: -1000, y: -1000 };
 
     const setSize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      initParticles();
     };
+
+    const initParticles = () => {
+      const particleCount = Math.min(Math.floor((canvas.width * canvas.height) / 15000), 80);
+      particles = [];
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          baseSize: Math.random() * 1.5 + 0.5,
+        });
+      }
+    };
+
     setSize();
     window.addEventListener("resize", setSize);
 
-    let mouse = { x: -1000, y: -1000 };
     const handleMouseMove = (e) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
     };
-    // Use window to capture mouse events globally across the whole hero section
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseleave", () => {
       mouse.x = -1000;
       mouse.y = -1000;
     });
-
-    const particles = [];
-    const particleCount = Math.min(Math.floor((window.innerWidth * window.innerHeight) / 10000), 120);
-
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8,
-        baseSize: Math.random() * 1.5 + 0.5,
-      });
-    }
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -165,41 +168,23 @@ const ParticleField = ({ isDark }) => {
         const dx = mouse.x - p.x;
         const dy = mouse.y - p.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = 180;
+        const maxDist = 150;
 
         let currentSize = p.baseSize;
-        let opacity = 0.3;
+        let opacity = 0.2;
 
-        // Interaction: particles scatter and brighten near the mouse cursor
         if (distance < maxDist) {
           const force = (maxDist - distance) / maxDist;
-          p.x -= (dx / distance) * force * 1.5;
-          p.y -= (dy / distance) * force * 1.5;
-          currentSize = p.baseSize * (1 + force * 2);
-          opacity = 0.3 + force * 0.5;
+          p.x -= (dx / distance) * force * 1.2;
+          p.y -= (dy / distance) * force * 1.2;
+          currentSize = p.baseSize * (1 + force * 1.5);
+          opacity = 0.2 + force * 0.4;
         }
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, currentSize, 0, Math.PI * 2);
-        ctx.fillStyle = isDark ? `rgba(245, 158, 11, ${opacity})` : `rgba(79, 70, 229, ${opacity})`;
+        ctx.fillStyle = `rgba(99, 102, 241, ${opacity})`;
         ctx.fill();
-
-        // Draw connections (constellation lines)
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dx2 = p.x - p2.x;
-          const dy2 = p.y - p2.y;
-          const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-
-          if (dist2 < 120) {
-            ctx.beginPath();
-            ctx.strokeStyle = isDark ? `rgba(245, 158, 11, ${0.15 * (1 - dist2 / 120)})` : `rgba(79, 70, 229, ${0.15 * (1 - dist2 / 120)})`;
-            ctx.lineWidth = 0.6;
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-          }
-        }
       });
 
       animationFrameId = requestAnimationFrame(draw);
@@ -212,18 +197,18 @@ const ParticleField = ({ isDark }) => {
       window.removeEventListener("mousemove", handleMouseMove);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [isDark]);
+  }, []);
 
   return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0" />;
 };
 
 // ─── Floating Sparkles ───────────────────────────────────────────────────────
 const FloatingSparkles = ({ isDark }) => {
-  const sparkles = Array.from({ length: 15 }, (_, i) => ({
+  const sparkles = Array.from({ length: 12 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
     y: Math.random() * 100,
-    size: Math.random() * 4 + 2,
+    size: Math.random() * 3 + 1.5,
     delay: Math.random() * 3,
   }));
 
@@ -232,10 +217,10 @@ const FloatingSparkles = ({ isDark }) => {
       {sparkles.map((s) => (
         <motion.div
           key={s.id}
-          className="absolute"
+          className="absolute hidden sm:block"
           style={{ left: `${s.x}%`, top: `${s.y}%` }}
-          animate={{ scale: [0, 1, 0], opacity: [0, 0.8, 0] }}
-          transition={{ duration: 2, delay: s.delay, repeat: Infinity, repeatDelay: Math.random() * 3 }}
+          animate={{ scale: [0, 1, 0], opacity: [0, 0.6, 0] }}
+          transition={{ duration: 2.5, delay: s.delay, repeat: Infinity, repeatDelay: Math.random() * 4 }}
         >
           <Sparkles size={s.size} className={isDark ? "text-amber-400" : "text-indigo-400"} />
         </motion.div>
@@ -247,29 +232,29 @@ const FloatingSparkles = ({ isDark }) => {
 // ─── Node Card ───────────────────────────────────────────────────────────────
 const NodeCard = ({ icon: Icon, label, positionClass, floatProps, T }) => (
   <motion.div
-    className={`absolute ${positionClass} w-[84px] h-[84px] rounded-[22px] border ${T.nodeBorder} ${T.nodeBg} ${T.nodeShadow} backdrop-blur-md flex flex-col items-center justify-center gap-1.5 z-30 cursor-pointer`}
+    className={`absolute ${positionClass} w-[70px] h-[70px] sm:w-[84px] sm:h-[84px] rounded-[20px] sm:rounded-[22px] border ${T.nodeBorder} ${T.nodeBg} ${T.nodeShadow} backdrop-blur-md flex flex-col items-center justify-center gap-1 z-30 cursor-pointer`}
     whileHover={{
-      scale: 1.15,
+      scale: 1.1,
       borderColor: T.nodeHoverBorder,
       boxShadow: T.nodeHoverGlow,
     }}
     animate={floatProps.animate}
     transition={floatProps.transition}
   >
-    <Icon size={24} className={`${T.nodeIcon} ${T.nodeIconGlow}`} />
-    <span className={`text-[10px] font-black tracking-widest ${T.nodeLabel} uppercase`}>{label}</span>
+    <Icon size={18} className={`sm:text-[24px] ${T.nodeIcon} ${T.nodeIconGlow}`} />
+    <span className={`text-[8px] sm:text-[10px] font-black tracking-widest ${T.nodeLabel} uppercase`}>{label}</span>
   </motion.div>
 );
 
-// ─── AI Orb ──────────────────────────────────────────────────────────────────
+// ─── AI Orb (Mobile Optimized) ───────────────────────────────────────────────
 const StunningAIOrb = ({ T }) => (
-  <div className="relative w-[480px] h-[480px] flex items-center justify-center scale-75 md:scale-90 lg:scale-100 origin-center">
-    <div className={`absolute inset-0 rounded-full ${T.blobBg} blur-[100px]`} />
+  <div className="relative w-[320px] h-[320px] sm:w-[400px] sm:h-[400px] lg:w-[480px] lg:h-[480px] flex items-center justify-center scale-100 origin-center">
+    <div className={`absolute inset-0 rounded-full ${T.blobBg} blur-[80px] sm:blur-[100px]`} />
 
     <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 500 500">
       <defs>
         <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feGaussianBlur stdDeviation="3" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
         <linearGradient id="orbitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -280,59 +265,56 @@ const StunningAIOrb = ({ T }) => (
 
       {/* Diagonal Orbit 1 */}
       <g transform="rotate(45 250 250)">
-        <ellipse cx="250" cy="250" rx="220" ry="80" fill="none" stroke={T.orbitColor} strokeWidth="1.5" />
-        <motion.ellipse cx="250" cy="250" rx="220" ry="80" fill="none" stroke="url(#orbitGrad)" strokeWidth="3"
+        <ellipse cx="250" cy="250" rx="200" ry="70" fill="none" stroke={T.orbitColor} strokeWidth="1.5" />
+        <motion.ellipse cx="250" cy="250" rx="200" ry="70" fill="none" stroke="url(#orbitGrad)" strokeWidth="2.5"
           strokeDasharray="20 1500" strokeLinecap="round" filter="url(#glow)"
           animate={{ strokeDashoffset: [1500, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} />
-        <motion.ellipse cx="250" cy="250" rx="220" ry="80" fill="none" stroke="url(#orbitGrad)" strokeWidth="2"
-          strokeDasharray="20 1500" strokeLinecap="round" filter="url(#glow)"
-          animate={{ strokeDashoffset: [1500, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "linear", delay: 2 }} />
       </g>
 
       {/* Diagonal Orbit 2 */}
       <g transform="rotate(-45 250 250)">
-        <ellipse cx="250" cy="250" rx="220" ry="80" fill="none" stroke={T.orbitColor} strokeWidth="1.5" />
-        <motion.ellipse cx="250" cy="250" rx="220" ry="80" fill="none" stroke="url(#orbitGrad)" strokeWidth="3"
+        <ellipse cx="250" cy="250" rx="200" ry="70" fill="none" stroke={T.orbitColor} strokeWidth="1.5" />
+        <motion.ellipse cx="250" cy="250" rx="200" ry="70" fill="none" stroke="url(#orbitGrad)" strokeWidth="2.5"
           strokeDasharray="20 1500" strokeLinecap="round" filter="url(#glow)"
           animate={{ strokeDashoffset: [1500, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "linear", delay: 1 }} />
       </g>
 
       {/* Outer Circular Orbit */}
-      <circle cx="250" cy="250" r="190" fill="none" stroke={T.orbitColor} strokeWidth="1.5" strokeDasharray="4 8" />
-      <motion.circle cx="250" cy="250" r="190" fill="none" stroke="url(#orbitGrad)" strokeWidth="2"
+      <circle cx="250" cy="250" r="175" fill="none" stroke={T.orbitColor} strokeWidth="1.5" strokeDasharray="4 8" />
+      <motion.circle cx="250" cy="250" r="175" fill="none" stroke="url(#orbitGrad)" strokeWidth="2"
         strokeDasharray="15 1500" strokeLinecap="round" filter="url(#glow)"
         animate={{ strokeDashoffset: [1500, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "linear" }} />
 
-      {/* Radial Anchor Lines */}
-      <g stroke={T.radialLine} strokeWidth="2" strokeDasharray="4 6" className="animate-pulse">
-        <line x1="250" y1="250" x2="250" y2="60" />
-        <line x1="250" y1="250" x2="250" y2="440" />
-        <line x1="250" y1="250" x2="60" y2="250" />
-        <line x1="250" y1="250" x2="440" y2="250" />
+      {/* Radial Anchor Lines - hidden on mobile */}
+      <g stroke={T.radialLine} strokeWidth="1.5" strokeDasharray="4 6" className="animate-pulse hidden sm:block">
+        <line x1="250" y1="250" x2="250" y2="75" />
+        <line x1="250" y1="250" x2="250" y2="425" />
+        <line x1="250" y1="250" x2="75" y2="250" />
+        <line x1="250" y1="250" x2="425" y2="250" />
       </g>
     </svg>
 
     {/* Central AI Core */}
     <motion.div
-      className={`relative z-20 w-[140px] h-[140px] rounded-[32px] border ${T.coreBorder} bg-gradient-to-br ${T.coreGradient} ${T.coreShadow} flex flex-col items-center justify-center gap-2 cursor-pointer`}
+      className={`relative z-20 w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] lg:w-[140px] lg:h-[140px] rounded-[24px] sm:rounded-[28px] lg:rounded-[32px] border ${T.coreBorder} bg-gradient-to-br ${T.coreGradient} ${T.coreShadow} flex flex-col items-center justify-center gap-1 sm:gap-2 cursor-pointer`}
       whileHover={{ scale: 1.05, boxShadow: T.coreHoverShadow }}
       animate={{ scale: [1, 1.02, 1], rotate: [0, 2, -2, 0] }}
       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
     >
-      <div className={`absolute inset-0 rounded-[32px] ${T.coreGlow} blur-md pointer-events-none`} />
-      <Brain size={44} className={`${T.coreIcon} ${T.coreIconGlow} relative z-10`} />
-      <span className={`text-[11px] font-black tracking-[0.2em] ${T.coreLabel} uppercase relative z-10`}>AI Core</span>
+      <div className={`absolute inset-0 rounded-[24px] sm:rounded-[28px] lg:rounded-[32px] ${T.coreGlow} blur-md pointer-events-none`} />
+      <Brain size={32} className={`lg:text-[44px] ${T.coreIcon} ${T.coreIconGlow} relative z-10`} />
+      <span className={`text-[9px] sm:text-[10px] lg:text-[11px] font-black tracking-[0.15em] lg:tracking-[0.2em] ${T.coreLabel} uppercase relative z-10`}>AI Core</span>
     </motion.div>
 
-    {/* 4 Satellite Nodes */}
-    <NodeCard icon={Code2} label="DSA" positionClass="top-[16px] left-[198px]" T={T}
-      floatProps={{ animate: { y: [-6, 6, -6] }, transition: { duration: 4, repeat: Infinity, ease: "easeInOut" } }} />
-    <NodeCard icon={Workflow} label="FLOW" positionClass="bottom-[16px] left-[198px]" T={T}
-      floatProps={{ animate: { y: [6, -6, 6] }, transition: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 } }} />
-    <NodeCard icon={FileSearch} label="OCR" positionClass="left-[16px] top-[198px]" T={T}
-      floatProps={{ animate: { x: [-6, 6, -6] }, transition: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 } }} />
-    <NodeCard icon={Target} label="MATCH" positionClass="right-[16px] top-[198px]" T={T}
-      floatProps={{ animate: { x: [6, -6, 6] }, transition: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.5 } }} />
+    {/* 4 Satellite Nodes - Repositioned for mobile */}
+    <NodeCard icon={Code2} label="DSA" positionClass="top-[8px] sm:top-[12px] lg:top-[16px] left-[calc(50%-35px)] sm:left-[198px]" T={T}
+      floatProps={{ animate: { y: [-4, 4, -4] }, transition: { duration: 4, repeat: Infinity, ease: "easeInOut" } }} />
+    <NodeCard icon={Workflow} label="FLOW" positionClass="bottom-[8px] sm:bottom-[12px] lg:bottom-[16px] left-[calc(50%-35px)] sm:left-[198px]" T={T}
+      floatProps={{ animate: { y: [4, -4, 4] }, transition: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 } }} />
+    <NodeCard icon={FileSearch} label="OCR" positionClass="left-[8px] sm:left-[12px] lg:left-[16px] top-[calc(50%-35px)] sm:top-[198px]" T={T}
+      floatProps={{ animate: { x: [-4, 4, -4] }, transition: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 } }} />
+    <NodeCard icon={Target} label="MATCH" positionClass="right-[8px] sm:right-[12px] lg:right-[16px] top-[calc(50%-35px)] sm:top-[198px]" T={T}
+      floatProps={{ animate: { x: [4, -4, 4] }, transition: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.5 } }} />
   </div>
 );
 
@@ -342,21 +324,21 @@ const StatPill = ({ icon: Icon, value, label, delay = 0, T }) => (
     initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: delay + 0.5, duration: 0.5 }}
-    className={`flex items-center gap-2.5 px-3 py-2 rounded-2xl border backdrop-blur-sm ${T.statPillBg}`}
+    className={`flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl border backdrop-blur-sm ${T.statPillBg}`}
   >
-    <div className={`w-7 h-7 rounded-lg ${T.statIconBg} flex items-center justify-center`}>
-      <Icon size={14} className={T.statIcon} />
+    <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg ${T.statIconBg} flex items-center justify-center`}>
+      <Icon size={12} className={`sm:text-[14px] ${T.statIcon}`} />
     </div>
     <div>
-      <p className={`text-base font-black ${T.statValue} leading-none`}>
+      <p className={`text-sm sm:text-base font-black ${T.statValue} leading-none`}>
         <Counter to={value} suffix="+" />
       </p>
-      <p className={`text-[8px] ${T.statLabel} uppercase tracking-widest mt-0.5`}>{label}</p>
+      <p className={`text-[7px] sm:text-[8px] ${T.statLabel} uppercase tracking-widest mt-0.5`}>{label}</p>
     </div>
   </motion.div>
 );
 
-// ─── Hero Section ─────────────────────────────────────────────────────────────
+// ─── Hero Section (Fully Responsive) ─────────────────────────────────────────
 const HeroSection = () => {
   const { isDark } = useTheme();
   const T = buildTheme(isDark);
@@ -379,41 +361,41 @@ const HeroSection = () => {
     navigate(user ? (roadmapCompany ? `/plan/${roadmapCompany}` : "/dashboard") : "/login");
 
   return (
-    <section className={`relative h-screen min-h-[650px] flex items-center justify-center overflow-hidden ${T.sectionBg} pt-20 transition-colors duration-300`}>
+    <section className={`relative min-h-screen flex items-center justify-center overflow-hidden ${T.sectionBg} pt-20 pb-12 transition-colors duration-300`}>
       {/* Radial gradient */}
       <div className={`absolute inset-0 ${T.radialOverlay}`} />
 
       {/* Centre glow blob */}
-      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full ${T.blobBg} blur-[120px] pointer-events-none`} />
+      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] sm:w-[800px] lg:w-[900px] h-[600px] sm:h-[800px] lg:h-[900px] rounded-full ${T.blobBg} blur-[100px] sm:blur-[120px] pointer-events-none`} />
 
-      {/* Grid pattern */}
+      {/* Grid pattern - lighter on mobile */}
       <div
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0 opacity-20 sm:opacity-30"
         style={{
           backgroundImage: `linear-gradient(${T.gridColor} 1px, transparent 1px), linear-gradient(90deg, ${T.gridColor} 1px, transparent 1px)`,
-          backgroundSize: "50px 50px",
+          backgroundSize: "30px 30px",
         }}
       />
 
-      <ParticleField colorClass={T.particleColor} />
+      <ParticleField />
       <FloatingSparkles isDark={isDark} />
 
-      <div className="relative z-10 max-w-[1100px] w-full mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 lg:gap-12 items-center justify-between">
+      <div className="relative z-10 max-w-[1100px] w-full mx-auto px-5 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 sm:gap-8 lg:gap-12 items-center">
         {/* ── Left: Text Content ── */}
-        <div className="flex flex-col">
+        <div className="flex flex-col text-center lg:text-left">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className="flex items-center gap-3 mb-6"
+            className="flex items-center justify-center lg:justify-start gap-3 mb-4 sm:mb-6"
           >
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${T.badgeBg}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${T.badgeDot} animate-pulse`} />
-              <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${T.badgeText}`}>
+            <div className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border ${T.badgeBg}`}>
+              <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${T.badgeDot} animate-pulse`} />
+              <span className={`text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] ${T.badgeText}`}>
                 Precision Drive 2026
               </span>
-              <Rocket size={12} className={T.badgeText} />
+              <Rocket size={10} className="sm:hidden ${T.badgeText}" />
             </div>
           </motion.div>
 
@@ -422,14 +404,14 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="mb-4"
+            className="mb-3 sm:mb-4"
           >
-            <h1 className="text-[56px] lg:text-[76px] font-black leading-[0.9] tracking-[-0.04em]">
+            <h1 className="text-[40px] sm:text-[56px] lg:text-[76px] font-black leading-[1.1] sm:leading-[0.9] tracking-[-0.03em] sm:tracking-[-0.04em]">
               <span
                 className="block italic"
                 style={{
                   WebkitTextFillColor: "transparent",
-                  WebkitTextStroke: `1.5px ${T.headingOutline}`,
+                  WebkitTextStroke: `1px ${T.headingOutline}`,
                 }}
               >
                 Target.
@@ -444,7 +426,7 @@ const HeroSection = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className={`text-[15px] ${T.bodyText} max-w-md mb-8 leading-relaxed`}
+            className={`text-[13px] sm:text-[15px] ${T.bodyText} max-w-md mx-auto lg:mx-0 mb-6 sm:mb-8 leading-relaxed px-2 sm:px-0`}
           >
             The definitive AI ecosystem for placement mastery. Crack DSA, ace
             mock interviews, and land your dream offer — all in one
@@ -456,7 +438,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.55 }}
-            className="flex flex-wrap items-center gap-4 mb-8"
+            className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 mb-6 sm:mb-8"
           >
             {/* Primary */}
             <motion.button
@@ -465,11 +447,11 @@ const HeroSection = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               onClick={handleStartPreparing}
-              className={`relative group px-8 py-[17px] ${T.pill} font-black uppercase tracking-widest text-[11px] rounded-2xl transition-all flex items-center gap-3 overflow-hidden shadow-lg`}
+              className={`relative group px-5 sm:px-8 py-3 sm:py-[17px] ${T.pill} font-black uppercase tracking-widest text-[10px] sm:text-[11px] rounded-xl sm:rounded-2xl transition-all flex items-center gap-2 sm:gap-3 overflow-hidden shadow-lg`}
             >
               <span className="relative z-10">Start Preparing</span>
               <motion.div animate={{ x: hovered ? 6 : 0, rotate: hovered ? 5 : 0 }} transition={{ type: "spring", stiffness: 300 }}>
-                <ArrowRight size={16} className="relative z-10" />
+                <ArrowRight size={14} className="sm:text-[16px] relative z-10" />
               </motion.div>
               <div className={`absolute inset-0 bg-gradient-to-r ${T.pillGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
             </motion.button>
@@ -479,7 +461,7 @@ const HeroSection = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               onClick={handleExploreRoadmap}
-              className={`px-8 py-[17px] rounded-2xl border-2 font-bold uppercase tracking-widest text-[11px] transition-all flex items-center gap-2 ${T.outlineBtn}`}
+              className={`px-5 sm:px-8 py-3 sm:py-[17px] rounded-xl sm:rounded-2xl border font-bold uppercase tracking-widest text-[10px] sm:text-[11px] transition-all flex items-center gap-2 ${T.outlineBtn}`}
             >
               <BookOpen size={14} />
               Explore Roadmap
@@ -487,26 +469,26 @@ const HeroSection = () => {
           </motion.div>
 
           {/* Stat Pills */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap justify-center lg:justify-start gap-2 sm:gap-3">
             <StatPill icon={Target}    value={24} label="Companies" delay={0.1} T={T} />
             <StatPill icon={TrendingUp} value={86} label="Readiness"  delay={0.2} T={T} />
             <StatPill icon={Shield} value={100} label="Success Rate"  delay={0.3} T={T} />
           </div>
         </div>
 
-        {/* ── Right: Orb ── */}
+        {/* ── Right: Orb (Hidden on mobile, shown on tablet+) ── */}
         <motion.div
           initial={{ opacity: 0, scale: 0.88 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, ease: "easeOut" }}
-          className="flex flex-col items-center justify-center relative"
+          className="hidden md:flex flex-col items-center justify-center relative mt-8 lg:mt-0"
         >
           <StunningAIOrb T={T} />
         </motion.div>
       </div>
 
       {/* Bottom fade */}
-      <div className={`absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t ${T.bottomFade} to-transparent pointer-events-none`} />
+      <div className={`absolute bottom-0 inset-x-0 h-24 sm:h-32 bg-gradient-to-t ${T.bottomFade} to-transparent pointer-events-none`} />
     </section>
   );
 };
