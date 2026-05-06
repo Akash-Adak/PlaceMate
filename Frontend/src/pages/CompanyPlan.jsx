@@ -5,7 +5,7 @@ import { Clock, Calendar, CheckCircle2, AlertTriangle, BookOpen, Link as LinkIco
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { generateCompanyPlan, getUserResults, getUserProgress, updateDayCompletion } from '../services/resume';
+import { generateCompanyPlan, getUserResults, getUserProgress } from '../services/resume';
 
 const loadingSteps = [
   'Reading your profile and company match data.',
