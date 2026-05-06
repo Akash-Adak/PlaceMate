@@ -108,7 +108,7 @@ const ResumeParsing = () => {
     <div className="min-h-screen bg-black text-white selection:bg-amber-500/30">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-8 pt-32 pb-12">
+      <main className="w-full max-w-[1600px] mx-auto px-6 sm:px-12 lg:px-20 pt-32 pb-12">
         <button 
           onClick={() => navigate('/dashboard')}
           className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-amber-500 transition-colors mb-12"
@@ -130,7 +130,7 @@ const ResumeParsing = () => {
           </motion.div>
         </header>
 
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
           {isLoadingPersistent ? (
              <div className="bg-[#0a0a0a] border border-white/5 rounded-[2.5rem] p-20 flex flex-col items-center justify-center">
                 <div className="w-10 h-10 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mb-6" />
@@ -145,34 +145,34 @@ const ResumeParsing = () => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.1 }}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10"
                 >
                   <div 
                     onClick={() => setOnboardingMode('upload')}
-                    className="bg-[#0a0a0a] border border-amber-500/20 rounded-[2.5rem] p-10 cursor-pointer hover:border-amber-500/50 transition-all group relative overflow-hidden"
+                    className="bg-[#0a0a0a] border border-amber-500/20 rounded-[2.5rem] p-12 lg:p-16 cursor-pointer hover:border-amber-500/50 transition-all group relative overflow-hidden flex flex-col justify-center"
                   >
                     <div className="absolute -right-8 -bottom-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity">
-                       <FileText size={160} />
+                       <FileText size={240} />
                     </div>
-                    <div className="w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                      <Upload className="text-amber-500" size={28} />
+                    <div className="w-20 h-20 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+                      <Upload className="text-amber-500" size={36} />
                     </div>
-                    <h3 className="text-xl font-black mb-2 uppercase italic">I have a Resume</h3>
-                    <p className="text-slate-500 text-xs font-medium leading-relaxed">Let AI parse your history and find your perfect career match instantly.</p>
+                    <h3 className="text-2xl lg:text-3xl font-black mb-3 uppercase italic">I have a Resume</h3>
+                    <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-lg">Let AI parse your history and find your perfect career match instantly.</p>
                   </div>
 
                   <div 
                     onClick={() => setOnboardingMode('basics')}
-                    className="bg-[#0a0a0a] border border-white/5 rounded-[2.5rem] p-10 cursor-pointer hover:border-amber-500/50 transition-all group relative overflow-hidden"
+                    className="bg-[#0a0a0a] border border-white/5 rounded-[2.5rem] p-12 lg:p-16 cursor-pointer hover:border-amber-500/50 transition-all group relative overflow-hidden flex flex-col justify-center"
                   >
                     <div className="absolute -right-8 -bottom-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity">
-                       <TrendingUp size={160} />
+                       <TrendingUp size={240} />
                     </div>
-                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                      <TrendingUp className="text-amber-500" size={28} />
+                    <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+                      <TrendingUp className="text-amber-500" size={36} />
                     </div>
-                    <h3 className="text-xl font-black mb-2 uppercase italic">Start from Basics</h3>
-                    <p className="text-slate-500 text-xs font-medium leading-relaxed">Early in your journey? Start your preparation roadmap from scratch.</p>
+                    <h3 className="text-2xl lg:text-3xl font-black mb-3 uppercase italic">Start from Basics</h3>
+                    <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-lg">Early in your journey? Start your preparation roadmap from scratch.</p>
                   </div>
                 </motion.div>
               )}
@@ -183,7 +183,7 @@ const ResumeParsing = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-[#0a0a0a] border border-amber-500/20 rounded-[2.5rem] p-12 relative overflow-hidden group shadow-2xl shadow-amber-500/5"
+                  className="bg-[#0a0a0a] border border-amber-500/20 rounded-[2.5rem] p-12 lg:p-20 relative overflow-hidden group shadow-2xl shadow-amber-500/5"
                 >
                   <button 
                     onClick={() => setOnboardingMode('choice')}
@@ -191,36 +191,36 @@ const ResumeParsing = () => {
                   >
                     ← Back
                   </button>
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-[80px] -mr-32 -mt-32 rounded-full group-hover:bg-amber-500/10 transition-colors" />
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 blur-[100px] -mr-32 -mt-32 rounded-full group-hover:bg-amber-500/10 transition-colors" />
                   
                   <div className="relative z-10 flex flex-col items-center text-center">
-                    <div className="w-20 h-20 bg-amber-500/10 rounded-3xl flex items-center justify-center mb-8 border border-white/5 shadow-inner">
-                      <CloudUpload className="text-amber-500" size={32} />
+                    <div className="w-24 h-24 bg-amber-500/10 rounded-3xl flex items-center justify-center mb-10 border border-white/5 shadow-inner">
+                      <CloudUpload className="text-amber-500" size={40} />
                     </div>
-                    <h2 className="text-2xl font-black mb-4 uppercase tracking-wider">Initialize AI Analysis</h2>
-                    <p className="text-slate-500 text-sm max-w-md mb-10 leading-relaxed font-medium">
+                    <h2 className="text-3xl lg:text-4xl font-black mb-6 uppercase tracking-wider">Initialize AI Analysis</h2>
+                    <p className="text-slate-500 text-base max-w-2xl mb-12 leading-relaxed font-medium">
                       Your career journey starts here. Upload your resume to allow our AI to parse your skills, match you with top companies, and build your personalized roadmap.
                     </p>
                     
                     <label className="cursor-pointer group">
                       <input type="file" className="hidden" accept=".pdf,.doc,.docx" onChange={handleFileUpload} disabled={isUploading} />
-                      <div className="px-12 py-5 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest text-xs rounded-full transition-all flex items-center gap-3 active:scale-95 shadow-xl shadow-amber-500/20">
+                      <div className="px-14 py-6 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest text-sm rounded-full transition-all flex items-center gap-4 active:scale-95 shadow-xl shadow-amber-500/20">
                         {isUploading ? (
                           <>
-                            <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                            <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
                             Processing Resume...
                           </>
                         ) : (
                           <>
                             Upload Your PDF
-                            <ArrowRight size={16} />
+                            <ArrowRight size={20} />
                           </>
                         )}
                       </div>
                     </label>
-                    <p className="mt-6 text-[10px] text-slate-600 font-bold uppercase tracking-widest">Supports PDF, DOCX (Max 10MB)</p>
+                    <p className="mt-8 text-[11px] text-slate-600 font-bold uppercase tracking-widest">Supports PDF, DOCX (Max 10MB)</p>
 
-                    <div className="w-full mt-10 max-w-2xl">
+                    <div className="w-full mt-12">
                       <ResumePanel parsedData={parsedData} isLoading={isUploading} />
                     </div>
                   </div>
@@ -232,7 +232,7 @@ const ResumeParsing = () => {
                   key="basics"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-[#0a0a0a] border border-white/5 rounded-[2.5rem] p-12"
+                  className="bg-[#0a0a0a] border border-white/5 rounded-[2.5rem] p-12 lg:p-20"
                 >
                   <button 
                     onClick={() => setOnboardingMode('choice')}
@@ -240,11 +240,11 @@ const ResumeParsing = () => {
                   >
                     ← Back
                   </button>
-                  <h2 className="text-2xl font-black mb-4 uppercase italic">Choose Your Target Company</h2>
-                  <p className="text-slate-500 text-sm mb-8 font-bold uppercase tracking-widest">Search and add companies to build your target list</p>
+                  <h2 className="text-3xl font-black mb-4 uppercase italic">Choose Your Target Company</h2>
+                  <p className="text-slate-500 text-base mb-10 font-bold uppercase tracking-widest">Search and add companies to build your target list</p>
 
-                  <div className="mb-6 relative">
-                    <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <div className="mb-8 relative max-w-3xl">
+                    <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
                       value={companySearch}
                       onChange={(e) => {

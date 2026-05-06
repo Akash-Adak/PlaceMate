@@ -20,7 +20,10 @@ const createWelcomeMessage = (pathname) => ({
 const VoiceAssistant = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([createWelcomeMessage(location.pathname)]);
+  const [showPrompts, setShowPrompts] = useState(true);
+  const [messages, setMessages] = useState([
+    createWelcomeMessage(location.pathname),
+  ]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
@@ -35,7 +38,7 @@ const VoiceAssistant = () => {
       top: messageListRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages, open]);
+  }, [messages, open, showPrompts]);
 
   const appendMessage = (role, content) => {
     setMessages((prev) => [
@@ -94,21 +97,30 @@ const VoiceAssistant = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-6 z-[90] w-[min(92vw,24rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#080808]/95 shadow-2xl backdrop-blur-xl"
+            className="fixed bottom-24 right-6 z-[90] w-[min(92vw,24rem)] h-[34rem] max-h-[calc(100vh-8rem)] flex flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#080808]/95 shadow-2xl backdrop-blur-xl"
           >
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-4 shrink-0">
               <div>
                 <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.35em] text-amber-500">
                   <Sparkles size={12} /> Chat Assistant
                 </p>
-                <p className="mt-1 text-[11px] text-slate-400">Gemini-powered text chat</p>
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Gemini-powered text chat
+                </p>
               </div>
-              <button onClick={() => setOpen(false)} className="text-slate-400 transition-colors hover:text-white" aria-label="Close voice assistant">
+              <button
+                onClick={() => setOpen(false)}
+                className="text-slate-400 transition-colors hover:text-white"
+                aria-label="Close voice assistant"
+              >
                 <X size={18} />
               </button>
             </div>
 
-            <div ref={messageListRef} className="max-h-[26rem] space-y-4 overflow-y-auto px-4 py-4">
+            <div
+              ref={messageListRef}
+              className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
+            >
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -127,18 +139,36 @@ const VoiceAssistant = () => {
               ))}
             </div>
 
-            <div className="border-t border-white/10 px-4 py-4">
-              <div className="mb-3 flex flex-wrap gap-2">
-                {quickPrompts.map((prompt) => (
-                  <button
-                    key={prompt}
-                    onClick={() => handleQuickPrompt(prompt)}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300 transition-colors hover:border-amber-500/30 hover:text-amber-400"
+            <div className="border-t border-white/10 px-4 py-4 shrink-0">
+              <AnimatePresence>
+                {showPrompts && (
+                  <motion.div
+                    initial={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0, overflow: "hidden" }}
+                    className="mb-3 relative pr-6"
                   >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
+                    <button
+                      onClick={() => setShowPrompts(false)}
+                      className="absolute top-0 right-[-10px] p-1 text-slate-500 hover:text-white transition-colors"
+                      title="Dismiss suggestions"
+                      aria-label="Dismiss suggestions"
+                    >
+                      <X size={14} />
+                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      {quickPrompts.map((prompt) => (
+                        <button
+                          key={prompt}
+                          onClick={() => handleQuickPrompt(prompt)}
+                          className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300 transition-colors hover:border-amber-500/30 hover:text-amber-400 text-left"
+                        >
+                          {prompt}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black px-3 py-2">
                 <input
@@ -167,7 +197,9 @@ const VoiceAssistant = () => {
                 <span>Text only</span>
               </div>
 
-              {error ? <p className="mt-3 text-xs text-red-400">{error}</p> : null}
+              {error ? (
+                <p className="mt-3 text-xs text-red-400">{error}</p>
+              ) : null}
             </div>
           </motion.div>
         )}
