@@ -146,7 +146,12 @@ const VoiceAssistant = () => {
       ? "mt-3 flex items-center justify-between text-[10px] uppercase tracking-[0.25em] text-slate-500"
       : "mt-3 flex items-center justify-between text-[10px] uppercase tracking-[0.25em] text-slate-400",
     
-    erro      ? "flex items-center gap-1 text-xs text-slate-500"
+    errorText: isDark
+      ? "mt-3 text-xs text-red-400"
+      : "mt-3 text-xs text-red-500",
+      
+    typingIndicator: isDark
+      ? "flex items-center gap-1 text-xs text-slate-500"
       : "flex items-center gap-1 text-xs text-slate-400",
   };
 
