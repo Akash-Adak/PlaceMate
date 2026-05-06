@@ -109,29 +109,112 @@ const Counter = ({ to, suffix = "" }) => {
 };
 
 // ─── Particle Field ──────────────────────────────────────────────────────────
-const ParticleField = ({ colorClass }) => {
-  const particles = Array.from({ length: 50 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 3 + 1,
-    delay: Math.random() * 5,
-    duration: Math.random() * 8 + 6,
-  }));
+const ParticleField = ({ isDark }) => {
+  const canvasRef = React.useRef(null);
 
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className={`absolute rounded-full ${colorClass}`}
-          style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size, opacity: 0.2 }}
-          animate={{ y: [0, -40, 0], x: [0, 20, 0], opacity: [0.1, 0.5, 0.1] }}
-          transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-    </div>
-  );
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let animationFrameId;
+
+    const setSize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    setSize();
+    window.addEventListener("resize", setSize);
+
+    let mouse = { x: -1000, y: -1000 };
+    const handleMouseMove = (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    };
+    // Use window to capture mouse events globally across the whole hero section
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseleave", () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
+    });
+
+    const particles = [];
+    const particleCount = Math.min(Math.floor((window.innerWidth * window.innerHeight) / 10000), 120);
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+        baseSize: Math.random() * 1.5 + 0.5,
+      });
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((p, i) => {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+
+        const dx = mouse.x - p.x;
+        const dy = mouse.y - p.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const maxDist = 180;
+
+        let currentSize = p.baseSize;
+        let opacity = 0.3;
+
+        // Interaction: particles scatter and brighten near the mouse cursor
+        if (distance < maxDist) {
+          const force = (maxDist - distance) / maxDist;
+          p.x -= (dx / distance) * force * 1.5;
+          p.y -= (dy / distance) * force * 1.5;
+          currentSize = p.baseSize * (1 + force * 2);
+          opacity = 0.3 + force * 0.5;
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, currentSize, 0, Math.PI * 2);
+        ctx.fillStyle = isDark ? `rgba(245, 158, 11, ${opacity})` : `rgba(79, 70, 229, ${opacity})`;
+        ctx.fill();
+
+        // Draw connections (constellation lines)
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dx2 = p.x - p2.x;
+          const dy2 = p.y - p2.y;
+          const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+
+          if (dist2 < 120) {
+            ctx.beginPath();
+            ctx.strokeStyle = isDark ? `rgba(245, 158, 11, ${0.15 * (1 - dist2 / 120)})` : `rgba(79, 70, 229, ${0.15 * (1 - dist2 / 120)})`;
+            ctx.lineWidth = 0.6;
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      window.removeEventListener("resize", setSize);
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [isDark]);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0" />;
 };
 
 // ─── Floating Sparkles ───────────────────────────────────────────────────────

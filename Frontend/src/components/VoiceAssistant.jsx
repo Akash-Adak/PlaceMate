@@ -22,7 +22,10 @@ const VoiceAssistant = () => {
   const { isDark } = useTheme();
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([createWelcomeMessage(location.pathname)]);
+  const [showPrompts, setShowPrompts] = useState(true);
+  const [messages, setMessages] = useState([
+    createWelcomeMessage(location.pathname),
+  ]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +40,7 @@ const VoiceAssistant = () => {
       top: messageListRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages, open]);
+  }, [messages, open, showPrompts]);
 
   const appendMessage = (role, content) => {
     setMessages((prev) => [
@@ -143,12 +146,7 @@ const VoiceAssistant = () => {
       ? "mt-3 flex items-center justify-between text-[10px] uppercase tracking-[0.25em] text-slate-500"
       : "mt-3 flex items-center justify-between text-[10px] uppercase tracking-[0.25em] text-slate-400",
     
-    errorText: isDark
-      ? "mt-3 text-xs text-red-400"
-      : "mt-3 text-xs text-red-500",
-    
-    typingIndicator: isDark
-      ? "flex items-center gap-1 text-xs text-slate-500"
+    erro      ? "flex items-center gap-1 text-xs text-slate-500"
       : "flex items-center gap-1 text-xs text-slate-400",
   };
 
@@ -171,9 +169,12 @@ const VoiceAssistant = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className={T.container}
+            className={isDark 
+              ? "fixed bottom-24 right-6 z-[90] w-[min(92vw,24rem)] h-[34rem] max-h-[calc(100vh-8rem)] flex flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#080808]/95 shadow-2xl backdrop-blur-xl"
+              : "fixed bottom-24 right-6 z-[90] w-[min(92vw,24rem)] h-[34rem] max-h-[calc(100vh-8rem)] flex flex-col overflow-hidden rounded-[2rem] border border-indigo-100 bg-white/95 shadow-2xl backdrop-blur-xl"
+            }
           >
-            <div className={T.header}>
+            <div className={`shrink-0 ${T.header}`}>
               <div>
                 <div className="flex items-center gap-2">
                   <Sparkles size={12} className={isDark ? "text-amber-500" : "text-indigo-600"} />
@@ -192,7 +193,7 @@ const VoiceAssistant = () => {
               </button>
             </div>
 
-            <div ref={messageListRef} className={T.messageList}>
+            <div ref={messageListRef} className={`flex-1 overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar`}>
               {messages.map((message, idx) => (
                 <motion.div
                   key={message.id}
@@ -216,18 +217,36 @@ const VoiceAssistant = () => {
               )}
             </div>
 
-            <div className="border-t border-indigo-100 px-4 py-4">
-              <div className={T.quickPromptsContainer}>
-                {quickPrompts.map((prompt) => (
-                  <button
-                    key={prompt}
-                    onClick={() => handleQuickPrompt(prompt)}
-                    className={T.quickPromptButton}
+            <div className={`shrink-0 ${isDark ? "border-t border-white/10 px-4 py-4" : "border-t border-indigo-100 px-4 py-4"}`}>
+              <AnimatePresence>
+                {showPrompts && (
+                  <motion.div
+                    initial={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0, overflow: "hidden" }}
+                    className="mb-3 relative pr-6"
                   >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
+                    <button
+                      onClick={() => setShowPrompts(false)}
+                      className={`absolute top-0 right-[-10px] p-1 transition-colors ${isDark ? "text-slate-500 hover:text-white" : "text-slate-400 hover:text-indigo-600"}`}
+                      title="Dismiss suggestions"
+                      aria-label="Dismiss suggestions"
+                    >
+                      <X size={14} />
+                    </button>
+                    <div className={T.quickPromptsContainer}>
+                      {quickPrompts.map((prompt) => (
+                        <button
+                          key={prompt}
+                          onClick={() => handleQuickPrompt(prompt)}
+                          className={T.quickPromptButton}
+                        >
+                          {prompt}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <div className={T.inputContainer}>
                 <input
@@ -265,8 +284,8 @@ const VoiceAssistant = () => {
 
               {error && (
                 <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
                   className={T.errorText}
                 >
                   {error}
