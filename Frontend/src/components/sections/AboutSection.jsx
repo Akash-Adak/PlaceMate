@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Target, Users, ShieldCheck, Zap, Sparkles, ArrowRight, CheckCircle, Star, Award } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 
 const AboutSection = () => {
@@ -228,23 +229,23 @@ const AboutSection = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <motion.a
-                href="/register"
-                className={T.primaryBtn}
+              <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                Join the Drive
-                <ArrowRight size={12} className="inline ml-2" />
-              </motion.a>
-              <motion.a
-                href="#features"
-                className={T.secondaryBtn}
+                <Link to="/register" className={T.primaryBtn}>
+                  Join the Drive
+                  <ArrowRight size={12} className="inline ml-2" />
+                </Link>
+              </motion.div>
+              <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                See Features
-              </motion.a>
+                <a href="#features" className={T.secondaryBtn}>
+                  See Features
+                </a>
+              </motion.div>
             </div>
 
             {/* Trust badge */}
