@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Mail, Linkedin, Twitter, Github, MapPin, Phone, Heart, Globe, Shield, Sparkles } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -44,10 +45,10 @@ const FooterSection = () => {
 
   const footerLinks = {
     product: [
-      { name: "Features", href: "#features" },
+      { name: "Resume Analysis", href: "/resume-parsing" },
+      { name: "Mock Interviews", href: "/mock-interview" },
+      { name: "Daily Prep", href: "/dashboard" },
       { name: "Pricing Plans", href: "/pricing" },
-      { name: "Roadmap", href: "/roadmap" },
-      { name: "Changelog", href: "/changelog" },
     ],
     company: [
       { name: "About Us", href: "#about" },
@@ -111,9 +112,9 @@ const FooterSection = () => {
             <ul className="space-y-2.5 text-sm">
               {footerLinks.product.map((link, idx) => (
                 <li key={idx}>
-                  <a href={link.href} className={T.link}>
+                  <Link to={link.href} className={T.link}>
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -125,9 +126,9 @@ const FooterSection = () => {
             <ul className="space-y-2.5 text-sm">
               {footerLinks.company.map((link, idx) => (
                 <li key={idx}>
-                  <a href={link.href} className={T.link}>
+                  <Link to={link.href} className={T.link}>
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -139,9 +140,9 @@ const FooterSection = () => {
             <ul className="space-y-2.5 text-sm">
               {footerLinks.legal.map((link, idx) => (
                 <li key={idx}>
-                  <a href={link.href} className={T.link}>
+                  <Link to={link.href} className={T.link}>
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

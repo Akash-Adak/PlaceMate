@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   FileText,
   Sparkles,
@@ -36,6 +37,7 @@ const CORE_FEATURES = [
     iconColor: "text-indigo-600",
     stat: "95%",
     statLabel: "Accuracy Rate",
+    route: "/resume-parsing",
   },
   {
     icon: BrainCircuit,
@@ -53,6 +55,7 @@ const CORE_FEATURES = [
     iconColor: "text-purple-600",
     stat: "200+",
     statLabel: "Companies Analyzed",
+    route: "/dashboard",
   },
   {
     icon: RefreshCw,
@@ -70,6 +73,7 @@ const CORE_FEATURES = [
     iconColor: "text-pink-600",
     stat: "85%",
     statLabel: "Retention Rate",
+    route: "/dashboard",
   },
   {
     icon: MessageSquare,
@@ -87,12 +91,14 @@ const CORE_FEATURES = [
     iconColor: "text-orange-600",
     stat: "1000+",
     statLabel: "Mock Interviews",
+    route: "/mock-interview",
   },
 ];
 
 /* ─── Main Section ─── */
 const FeaturesSection = () => {
   const { isDark } = useTheme();
+  const navigate = useNavigate();
 
   const T = {
     sectionBg: isDark 
@@ -215,7 +221,8 @@ const FeaturesSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className={`group relative rounded-[2rem] border-2 ${T.cardBorder} ${T.cardBg} overflow-hidden transition-all duration-500 ${T.cardHoverBorder} hover:-translate-y-2`}
+              onClick={() => navigate(feature.route)}
+              className={`cursor-pointer group relative rounded-[2rem] border-2 ${T.cardBorder} ${T.cardBg} overflow-hidden transition-all duration-500 ${T.cardHoverBorder} hover:-translate-y-2`}
             >
               {/* Background Accent on Hover */}
               <div className={`absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r ${feature.accent} opacity-30 group-hover:opacity-100 transition-opacity duration-500`} />
