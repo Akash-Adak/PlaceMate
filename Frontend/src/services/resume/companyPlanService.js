@@ -10,7 +10,7 @@ export const generateCompanyPlan = async (userId, userName, level, companyData) 
     // 1. Check if the plan already exists in Firestore
     const safeCompanyName = companyData.name.replace(/[^a-zA-Z0-9]/g, "_");
     const docId = `${userId}_${safeCompanyName}`;
-    const docRef = doc(db, "placemate-company-plans", docId);
+    const docRef = doc(db, "placemate-user-plans", docId);
 
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {

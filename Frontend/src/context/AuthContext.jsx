@@ -8,13 +8,13 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  updateProfile
+  updateProfile,
+  sendEmailVerification  // ← ADD THIS
 } from "firebase/auth";
 import { auth } from "../firebase";
 import { syncUserToSheet } from "../services/n8nSync";
 
 const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
@@ -48,15 +48,24 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
+  // ✅ FIXED: Now sends verification email after signup
   const signup = async (email, password, displayName) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(userCredential.user, { displayName });
+    await sendEmailVerification(userCredential.user); // ← SENDS VERIFICATION EMAIL
     await syncUserToSheet(userCredential.user, "email");
     return userCredential;
   };
 
+  // ✅ FIXED: Blocks login if email not verified
   const login = async (email, password) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    
+    if (!userCredential.user.emailVerified) {
+      await signOut(auth); // sign them out immediately
+      throw { code: "auth/email-not-verified" }; // throw custom error
+    }
+
     await syncUserToSheet(userCredential.user, "email");
     return userCredential;
   };
@@ -65,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     const provider = new GoogleAuthProvider();
     try {
       const userCredential = await signInWithPopup(auth, provider);
-      console.log("Google Sign-in successful:", userCredential.user);
+      // Google accounts are pre-verified, no need to check
       await syncUserToSheet(userCredential.user, "google");
       return userCredential;
     } catch (error) {
@@ -78,14 +87,18 @@ export const AuthProvider = ({ children }) => {
         await signInWithRedirect(auth, provider);
         return null;
       }
-
       throw error;
     }
   };
 
-  const logout = () => {
-    return signOut(auth);
+  // ✅ NEW: Resend verification email
+  const resendVerificationEmail = async () => {
+    if (auth.currentUser && !auth.currentUser.emailVerified) {
+      await sendEmailVerification(auth.currentUser);
+    }
   };
+
+  const logout = () => signOut(auth);
 
   const value = {
     user,
@@ -93,6 +106,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     loginWithGoogle,
+    resendVerificationEmail, // ← expose it
     loading
   };
 

@@ -163,7 +163,6 @@ const Navbar = () => {
           </NavLink>
           <NavLink isDark={isDark} onClick={() => scrollTo("features")}>Features</NavLink>
           <NavLink isDark={isDark} onClick={() => scrollTo("about")}>About</NavLink>
-          <NavLink isDark={isDark} onClick={() => go("/mock-interview")}>Mock Interview</NavLink>
         </div>
 
         {/* ── Right Controls ─────────────────────────────────────── */}
