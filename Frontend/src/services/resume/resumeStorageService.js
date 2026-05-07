@@ -68,6 +68,7 @@ export const uploadResume = async (file, userId, email) => {
 
 export const getUserResults = async (userId) => {
   try {
+    console.log(userId);
     const docRef = doc(db, "placemate-user-company-recomendation", userId);
     const docSnap = await getDoc(docRef);
 

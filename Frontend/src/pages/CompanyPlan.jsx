@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Clock, Calendar, CheckCircle2, AlertTriangle, BookOpen, Link as LinkIcon, ArrowLeft, Lock, Unlock, Sparkles, Target, TrendingUp, Award, Hourglass } from 'lucide-react';
+import { Clock, Calendar, CheckCircle2, AlertTriangle, Link as LinkIcon, ArrowLeft, Lock, Hourglass, RefreshCw } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -13,52 +13,6 @@ const loadingSteps = [
   'Building the day-by-day roadmap structure.',
   'Finalizing your custom prep plan.'
 ];
-
-// Helper function to check if a day can be unlocked
-const canUnlockDay = (dayNumber, progress, planLengthDays) => {
-  if (dayNumber === 1) return true; // Day 1 is always unlocked
-  
-  const prevDayCompletion = progress[dayNumber - 1];
-  if (!prevDayCompletion || !prevDayCompletion.completedAt) return false;
-  
-  const completedTime = new Date(prevDayCompletion.completedAt).getTime();
-  const currentTime = new Date().getTime();
-  const hoursSinceCompletion = (currentTime - completedTime) / (1000 * 60 * 60);
-  
-  // Require 24 hours between days
-  return hoursSinceCompletion >= 24;
-};
-
-// Helper to get unlock status and time remaining
-const getDayUnlockStatus = (dayNumber, progress) => {
-  if (dayNumber === 1) {
-    return { unlocked: true, timeRemaining: null, canUnlock: true };
-  }
-  
-  const prevDayCompletion = progress[dayNumber - 1];
-  if (!prevDayCompletion || !prevDayCompletion.completedAt) {
-    return { unlocked: false, timeRemaining: null, canUnlock: false };
-  }
-  
-  const completedTime = new Date(prevDayCompletion.completedAt).getTime();
-  const currentTime = new Date().getTime();
-  const hoursSinceCompletion = (currentTime - completedTime) / (1000 * 60 * 60);
-  
-  if (hoursSinceCompletion >= 24) {
-    return { unlocked: true, timeRemaining: null, canUnlock: true };
-  }
-  
-  const remainingHours = 24 - hoursSinceCompletion;
-  const remainingMinutes = Math.ceil(remainingHours * 60);
-  const hours = Math.floor(remainingHours);
-  const minutes = Math.ceil(remainingHours % 1 * 60);
-  
-  return {
-    unlocked: false,
-    timeRemaining: { hours, minutes, totalMinutes: remainingMinutes },
-    canUnlock: false
-  };
-};
 
 const CompanyPlan = () => {
   const { companyName } = useParams();
@@ -72,6 +26,7 @@ const CompanyPlan = () => {
   const [progress, setProgress] = useState({});
   const [loadingStep, setLoadingStep] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Update current time every minute for countdowns
   useEffect(() => {
@@ -81,42 +36,65 @@ const CompanyPlan = () => {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const fetchPlanAndProgress = async () => {
-      if (!user) return;
-      
-      setLoading(true);
-      setLoadingStep(0);
-      setError(null);
-      
-      try {
-        const profile = await getUserResults(user.uid);
-        if (!profile || !profile.companies) {
-          throw new Error("Could not find your profile data. Please upload your resume first.");
-        }
-
-        const companyObj = profile.companies.find(c => c.name === companyName);
-        if (!companyObj) {
-          throw new Error("Company not found in your target list.");
-        }
-
-        const progressData = await getUserProgress(user.uid, companyName);
-        setProgress(progressData);
-
-        const result = await generateCompanyPlan(user.uid, user.displayName || "User", profile.level, companyObj);
-        if (result.success && result.data) {
-          setPlan(result.data);
-        } else {
-          setError("Failed to generate plan. Please ensure the backend is available.");
-        }
-      } catch (err) {
-        setError(err.message || "An unexpected error occurred.");
-      } finally {
-        setLoading(false);
+  const fetchPlanAndProgress = async (forceRefresh = false) => {
+    if (!user) return;
+    
+    setLoading(true);
+    setLoadingStep(0);
+    setError(null);
+    if (forceRefresh) setIsRefreshing(true);
+    
+    try {
+      // Get user profile
+      const profile = await getUserResults(user.uid);
+      if (!profile || !profile.companies) {
+        throw new Error("Could not find your profile data. Please upload your resume first.");
       }
-    };
 
-    fetchPlanAndProgress();
+      // Find the specific company
+      const companyObj = profile.companies.find(c => c.name === companyName);
+      if (!companyObj) {
+        throw new Error("Company not found in your target list.");
+      }
+
+      // Get user progress for this company
+      const progressData = await getUserProgress(user.uid, companyName);
+      setProgress(progressData);
+      
+      console.log(`📋 Fetching plan for ${companyName} (forceRefresh: ${forceRefresh})`);
+      
+      // Generate or fetch plan
+      const result = await generateCompanyPlan(
+        user.uid, 
+        user.displayName || "User", 
+        profile.level, 
+        companyObj,
+        forceRefresh // Pass forceRefresh parameter
+      );
+      
+      console.log("📊 Plan result:", result);
+      
+      if (result.success && result.data) {
+        if (result.fromCache) {
+          console.log(`✅ Using cached plan from Firestore for ${companyName}`);
+        } else {
+          console.log(`✨ Using newly generated plan for ${companyName}`);
+        }
+        setPlan(result.data);
+      } else {
+        throw new Error(result.error || "Failed to generate plan. Please ensure the backend is available.");
+      }
+    } catch (err) {
+      console.error("❌ Error in fetchPlanAndProgress:", err);
+      setError(err.message || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlanAndProgress(false);
   }, [companyName, user]);
 
   useEffect(() => {
@@ -129,6 +107,10 @@ const CompanyPlan = () => {
     return () => window.clearInterval(timer);
   }, [loading]);
 
+  const handleRefresh = () => {
+    fetchPlanAndProgress(true);
+  };
+
   /* ── Theme tokens ────────────────────────────────────────────── */
   const T = {
     pageBg: isDark
@@ -138,6 +120,10 @@ const CompanyPlan = () => {
     backButton: isDark
       ? "flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-amber-500 transition-colors mb-12"
       : "flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition-colors mb-12",
+    
+    refreshButton: isDark
+      ? "flex items-center gap-2 px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-amber-500 transition-colors rounded-xl border border-white/5 hover:border-amber-500/30"
+      : "flex items-center gap-2 px-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-indigo-600 transition-colors rounded-xl border border-indigo-100 hover:border-indigo-300",
     
     loadingContainer: isDark
       ? "bg-[#0a0a0a] border border-amber-500/20 rounded-[3rem] shadow-2xl relative overflow-hidden"
@@ -320,8 +306,8 @@ const CompanyPlan = () => {
       : "inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-indigo-700 transition-colors shadow-sm",
     
     timelineHeader: isDark
-      ? "text-2xl font-black uppercase italic tracking-widest mb-10 border-b border-white/5 pb-4"
-      : "text-2xl font-black uppercase italic tracking-widest mb-10 border-b border-indigo-100 pb-4 text-slate-800",
+      ? "text-2xl font-black uppercase italic tracking-widest mb-10 border-b border-white/5 pb-4 flex justify-between items-center"
+      : "text-2xl font-black uppercase italic tracking-widest mb-10 border-b border-indigo-100 pb-4 text-slate-800 flex justify-between items-center",
     
     timelineAccent: isDark
       ? "text-amber-500"
@@ -372,7 +358,7 @@ const CompanyPlan = () => {
       ? `px-6 py-2 font-black uppercase text-[10px] tracking-widest rounded-xl transition-colors shadow-lg flex items-center gap-2 ${isComplete ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30' : 'bg-white text-black hover:bg-amber-500'}`
       : `px-6 py-2 font-black uppercase text-[10px] tracking-widest rounded-xl transition-colors shadow-sm flex items-center gap-2 ${isComplete ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`,
     
-    lockedButton: (isTimeLocked, timeRemaining) => isDark
+    lockedButton: () => isDark
       ? `px-6 py-2 bg-white/5 text-slate-400 font-black uppercase text-[10px] tracking-widest rounded-xl border border-white/5 flex items-center gap-2 cursor-not-allowed`
       : `px-6 py-2 bg-slate-100 text-slate-500 font-black uppercase text-[10px] tracking-widest rounded-xl border border-slate-200 flex items-center gap-2 cursor-not-allowed`,
     
@@ -392,7 +378,7 @@ const CompanyPlan = () => {
       ? "text-xs font-bold text-slate-500 block"
       : "text-xs font-bold text-slate-500 block",
     
-    sessionDivider: (isUnlocked) => isDark
+    sessionDivider: () => isDark
       ? `w-0.5 min-h-[40px] bg-white/10 rounded-full shrink-0 relative mt-2`
       : `w-0.5 min-h-[40px] bg-indigo-100 rounded-full shrink-0 relative mt-2`,
     
@@ -410,12 +396,25 @@ const CompanyPlan = () => {
       <Navbar />
       
       <main className="max-w-7xl w-full mx-auto px-6 pt-32 pb-24">
-        <button 
-          onClick={() => navigate('/dashboard')}
-          className={T.backButton}
-        >
-          <ArrowLeft size={14} /> Back to Dashboard
-        </button>
+        <div className="flex justify-between items-center mb-12">
+          <button 
+            onClick={() => navigate('/dashboard')}
+            className={T.backButton}
+          >
+            <ArrowLeft size={14} /> Back to Dashboard
+          </button>
+          
+          {!loading && plan && (
+            <button 
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className={T.refreshButton}
+            >
+              <RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} /> 
+              {isRefreshing ? "Refreshing..." : "Refresh Plan"}
+            </button>
+          )}
+        </div>
 
         {loading ? (
           <div className={T.loadingContainer}>
@@ -476,9 +475,14 @@ const CompanyPlan = () => {
             <AlertTriangle size={48} className="text-red-500 mx-auto mb-6" />
             <h2 className={T.errorTitle}>Generation Failed</h2>
             <p className={T.errorMessage}>{error}</p>
-            <button onClick={() => navigate('/dashboard')} className={T.errorButton}>
-              Return to Dashboard
-            </button>
+            <div className="flex gap-4 justify-center">
+              <button onClick={() => fetchPlanAndProgress(true)} className={T.errorButton}>
+                Try Again
+              </button>
+              <button onClick={() => navigate('/dashboard')} className={T.errorButton}>
+                Return to Dashboard
+              </button>
+            </div>
           </div>
         ) : plan && (
           <motion.div 
@@ -543,7 +547,7 @@ const CompanyPlan = () => {
                   <ul className="space-y-3">
                     {plan.strengths?.map((s, i) => (
                       <li key={i} className={T.strengthText}>
-                        <span className={isDark ? "text-green-500" : "text-green-600"} mt-1>•</span> {s}
+                        <span className={`${isDark ? "text-green-500" : "text-green-600"} mt-1 shrink-0`}>•</span> {s}
                       </li>
                     ))}
                   </ul>
@@ -564,7 +568,7 @@ const CompanyPlan = () => {
                   <ul className="space-y-3">
                     {plan.gaps?.map((g, i) => (
                       <li key={i} className={T.gapText}>
-                        <span className={isDark ? "text-amber-500" : "text-amber-600"} mt-1>•</span> {g}
+                        <span className={`${isDark ? "text-amber-500" : "text-amber-600"} mt-1 shrink-0`}>•</span> {g}
                       </li>
                     ))}
                   </ul>
@@ -586,7 +590,7 @@ const CompanyPlan = () => {
                   </div>
                   <div className="flex-1">
                     <h4 className={T.verdictTitle}>
-                      {plan.verdict.verdict?.replace('_', ' ')}
+                      {plan.verdict.verdict?.replace(/_/g, ' ')}
                       {plan.verdict.apply_after && (
                         <span className={T.verdictApplyBadge}>
                           Apply: {plan.verdict.apply_after}
@@ -681,12 +685,12 @@ const CompanyPlan = () => {
                                 {isCurrentDayComplete ? 'Review Day' : `Practice Day ${day.day_number}`}
                               </button>
                             ) : isTimeLocked && timeRemaining ? (
-                              <div className={T.lockedButton(true, timeRemaining)}>
+                              <div className={T.lockedButton()}>
                                 <Hourglass size={12} /> 
                                 Unlocks in {timeRemaining.hours}h {timeRemaining.minutes}m
                               </div>
                             ) : (
-                              <div className={T.lockedButton(false, null)}>
+                              <div className={T.lockedButton()}>
                                 <Lock size={12} /> Complete Day {day.day_number - 1} First
                               </div>
                             )}
@@ -701,7 +705,7 @@ const CompanyPlan = () => {
                                   <span className={T.sessionBlock(isUnlocked)}>{session.block}</span>
                                   <span className={T.sessionDuration}>{session.duration}</span>
                                 </div>
-                                <div className={T.sessionDivider(isUnlocked)}>
+                                <div className={T.sessionDivider()}>
                                   <div className={T.sessionDot(isUnlocked)} />
                                 </div>
                                 <div className="flex-1 pb-4">

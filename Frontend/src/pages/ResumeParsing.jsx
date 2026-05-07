@@ -13,10 +13,6 @@ import {
   Search,
   Plus,
   X,
-  Sparkles,
-  Zap,
-  Briefcase,
-  Award
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -36,7 +32,6 @@ const ResumeParsing = () => {
   const [parsedData, setParsedData] = useState(null);
   const [onboardingMode, setOnboardingMode] = useState('choice');
   const [isLoadingPersistent, setIsLoadingPersistent] = useState(true);
-  const [unlockedCompany, setUnlockedCompany] = useState(localStorage.getItem('unlockedCompany') || null);
   const [companySearch, setCompanySearch] = useState('');
   const [selectedBasicsCompany, setSelectedBasicsCompany] = useState('');
   const [showAllBasicsCompanies, setShowAllBasicsCompanies] = useState(false);
@@ -58,16 +53,13 @@ const ResumeParsing = () => {
     setSelectedBasicsCompany('');
   };
 
-  const handleViewPlan = (companyName) => {
-    if (!unlockedCompany) {
-      localStorage.setItem('unlockedCompany', companyName);
-      setUnlockedCompany(companyName);
+  const handleViewPlan = (companyName, isFreeAccess) => {
+    if (isFreeAccess) {
       navigate(`/plan/${companyName}`);
-    } else if (unlockedCompany === companyName) {
-      navigate(`/plan/${companyName}`);
-    } else {
-      navigate('/pricing');
+      return;
     }
+
+    navigate('/pricing');
   };
 
   useEffect(() => {
@@ -609,7 +601,10 @@ const ResumeParsing = () => {
                   </div>
                   
                   <div className="grid grid-cols-1 gap-8">
-                    {parsedData.companies.map((company, i) => (
+                    {parsedData.companies.map((company, i) => {
+                      const isFreeAccess = i === 0;
+
+                      return (
                       <motion.div
                         key={i}
                         initial={{ opacity: 0, x: -20 }}
@@ -642,15 +637,21 @@ const ResumeParsing = () => {
                             <div className={T.readinessBadge(company.applyReadiness)}>
                               {company.applyReadiness.replace('_', ' ')} • {company.type}
                             </div>
+
+                            <div className="mt-3 mb-6">
+                              <span className={isFreeAccess ? T.progressBadge('green') : T.progressBadge('amber')}>
+                                {isFreeAccess ? 'Free Access' : 'Locked'}
+                              </span>
+                            </div>
                             
                             <p className={T.matchReason}>&ldquo;{company.matchReason}&rdquo;</p>
                             
                             <div className="flex items-center gap-4">
                               <button 
-                                onClick={() => handleViewPlan(company.name)}
+                                onClick={() => handleViewPlan(company.name, isFreeAccess)}
                                 className={T.viewPlanButton}
                               >
-                                {unlockedCompany === company.name ? 'View Prep Plan' : (unlockedCompany ? 'Unlock Plan 🔒' : 'Unlock Free Plan')}
+                                {isFreeAccess ? 'View Free Plan' : 'Unlock Plan 🔒'}
                                 <ArrowRight size={14} />
                               </button>
                               <a href={company.careersUrl} target="_blank" rel="noreferrer" className={T.careersLink}>
@@ -689,7 +690,8 @@ const ResumeParsing = () => {
                           </div>
                         </div>
                       </motion.div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </motion.div>
