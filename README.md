@@ -1,5 +1,7 @@
 # 🚀 PlaceMate - AI-Powered Placement Prep Agent
 
+Github repo link - https://github.com/Bera-Avijit/PlaceMate.git
+
 > Transform your placement preparation with personalized, AI-driven interview practice and feedback loops.
 
 ## 📋 Table of Contents
