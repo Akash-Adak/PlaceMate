@@ -187,7 +187,7 @@ const VoiceAssistant = () => {
                     AI Assistant
                   </p>
                 </div>
-                <p className={T.headerSubtext}>Gemini-powered • Always here to help</p>
+                <p className={T.headerSubtext}>Groq-powered • Always here to help</p>
               </div>
               <button 
                 onClick={() => setOpen(false)} 
