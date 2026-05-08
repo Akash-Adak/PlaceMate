@@ -1,5 +1,5 @@
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || "gemini-1.5-flash";
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GORQ_API_KEY;
+const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "llama-3.1-8b-instant";
 
 const buildConversationPrompt = ({ messages, locationPathname }) => {
   const transcript = messages
@@ -43,58 +43,56 @@ ${transcript}
 Candidate answer and next interview step:`;
 };
 
-const requestGeminiReply = async (prompt) => {
-  if (!GEMINI_API_KEY) {
-    const msg = "❌ VITE_GEMINI_API_KEY is missing. Add it to your .env.local file: VITE_GEMINI_API_KEY=your_actual_key_here";
+const requestGroqReply = async (prompt) => {
+  if (!GROQ_API_KEY) {
+    const msg = "❌ VITE_GROQ_API_KEY is missing. Add it to your .env.local file: VITE_GROQ_API_KEY=your_actual_key_here";
     console.error(msg);
     throw new Error(msg);
   }
 
-  if (GEMINI_API_KEY.length < 20) {
-    const msg = "❌ VITE_GEMINI_API_KEY looks invalid (too short). Check your .env.local file.";
+  if (GROQ_API_KEY.length < 20) {
+    const msg = "❌ VITE_GROQ_API_KEY looks invalid (too short). Check your .env.local file.";
     console.error(msg);
     throw new Error(msg);
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const endpoint = "https://api.groq.com/openai/v1/chat/completions";
 
-  console.log(`🤖 Gemini request: model=${GEMINI_MODEL}, endpoint=[redacted]`);
+  console.log(`🤖 Groq request: model=${GROQ_MODEL}, endpoint=[redacted]`);
 
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      contents: [
+      model: GROQ_MODEL,
+      messages: [
         {
           role: "user",
-          parts: [{ text: prompt }],
+          content: prompt,
         },
       ],
-      generationConfig: {
-        temperature: 0.6,
-        topP: 0.9,
-        maxOutputTokens: 220,
-      },
+      temperature: 0.6,
+      top_p: 0.9,
+      max_tokens: 220,
+      stream: false,
     }),
   });
 
   if (!response.ok) {
     const errorBody = await response.text();
-    const msg = `❌ Gemini API error ${response.status}: ${errorBody || "Check your API key and ensure Gemini API is enabled in Google Cloud Console."}`;
+    const msg = `❌ Groq API error ${response.status}: ${errorBody || "Check your API key and ensure Groq access is enabled."}`;
     console.error(msg);
     throw new Error(msg);
   }
 
   const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts
-    ?.map((part) => part.text || "")
-    .join("")
-    .trim();
+  const text = data?.choices?.[0]?.message?.content?.trim();
 
   if (!text) {
-    throw new Error("Gemini returned an empty response.");
+    throw new Error("Groq returned an empty response.");
   }
 
   return text;
@@ -102,10 +100,10 @@ const requestGeminiReply = async (prompt) => {
 
 export const getGeminiAssistantReply = async ({ messages, locationPathname }) => {
   const prompt = buildConversationPrompt({ messages, locationPathname });
-  return requestGeminiReply(prompt);
+  return requestGroqReply(prompt);
 };
 
 export const getGeminiMockInterviewReply = async ({ messages, companyName }) => {
   const prompt = buildMockInterviewPrompt({ messages, companyName });
-  return requestGeminiReply(prompt);
+  return requestGroqReply(prompt);
 };
