@@ -261,6 +261,7 @@ const Navbar = () => {
 
                       <div className="p-1.5">
                         <DropdownItem icon={LayoutDashboard} onClick={() => go("/dashboard")} isDark={isDark}>Dashboard</DropdownItem>
+                        <DropdownItem icon={UserCircle} onClick={() => go("/profile")} isDark={isDark}>Profile</DropdownItem>
                         <DropdownItem icon={Mic} onClick={() => go("/mock-interview")} isDark={isDark}>Mock Interview</DropdownItem>
                         <DropdownItem icon={FileText} onClick={() => go("/resume-parsing")} isDark={isDark}>Resume Parsing</DropdownItem>
                         <DropdownItem icon={CreditCard} onClick={() => go("/pricing")} isDark={isDark}>Pricing & Plans</DropdownItem>
@@ -331,6 +332,7 @@ const Navbar = () => {
                     ) : (
                       <>
                         <button onClick={() => go("/mock-interview")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${T.mobileItem}`}><Mic size={15} className="opacity-60" /> Mock Interview</button>
+                        <button onClick={() => go("/profile")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${T.mobileItem}`}><UserCircle size={15} className="opacity-60" /> Profile</button>
                         <button onClick={() => go("/resume-parsing")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${T.mobileItem}`}><FileText size={15} className="opacity-60" /> Resume Parsing</button>
                         <button onClick={() => go("/dashboard")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${T.mobileItem}`}><LayoutDashboard size={15} className="opacity-60" /> Dashboard</button>
                         <button onClick={() => go("/pricing")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${T.mobileItem}`}><CreditCard size={15} className="opacity-60" /> Pricing & Plans</button>

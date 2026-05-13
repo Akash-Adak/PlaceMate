@@ -78,7 +78,30 @@ export const generateQuestions = async (userId, companyName, dayNumber) => {
       };
     });
 
-    // 4. Save the generated questions to Firestore to cache them for future visits
+    // 4. Re-order questions so they are grouped by type (concept vs coding)
+    // Priority: concept -> applied -> hands_on -> dsa -> (others)
+    const typePriority = {
+      concept: 0,
+      applied: 1,
+      hands_on: 2,
+      dsa: 3,
+    };
+
+    cleanedQuestions.sort((a, b) => {
+      const ta = typePriority[a.type] ?? 99;
+      const tb = typePriority[b.type] ?? 99;
+      if (ta !== tb) return ta - tb;
+      // Keep session ordering if provided
+      const sa = a.session || 0;
+      const sb = b.session || 0;
+      if (sa !== sb) return sa - sb;
+      // Fallback to stable string compare of id/title
+      const ka = a.id || a.title || "";
+      const kb = b.id || b.title || "";
+      return ka.localeCompare(kb);
+    });
+
+    // 5. Save the generated questions to Firestore to cache them for future visits
     const questionsCollection = collection(db, "placemate-user-questions");
     await Promise.all(
       cleanedQuestions.map(async (q) => {
