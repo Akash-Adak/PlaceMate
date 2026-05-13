@@ -2,7 +2,7 @@
  * Resume storage and persistence helpers.
  */
 import { db } from "../../firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { VITE_N8N_RESUME_TARGET } from "./shared";
 
 export const uploadResume = async (file, userId, email) => {
@@ -58,6 +58,24 @@ export const uploadResume = async (file, userId, email) => {
 
     // PERSISTENCE: Save the results to Firestore immediately
     await saveUserResults(userId, cleanedData);
+
+    // Save user profile metadata only. Resume file/link is managed separately by n8n.
+    // Wrapped in try-catch to not fail the entire upload if profile write fails due to permissions.
+    try {
+      await setDoc(
+        doc(db, "placemate-user-profile", userId),
+        {
+          username: userId,
+          email: email || null,
+          lastParsedAt: new Date().toISOString(),
+        },
+        { merge: true },
+      );
+      console.log("✅ Saved profile metadata.");
+    } catch (profileErr) {
+      console.warn("⚠️ Could not save profile metadata (permissions):", profileErr.message);
+      // Non-fatal: resume analysis is already saved above
+    }
 
     return { success: true, data: cleanedData };
   } catch (error) {
@@ -169,5 +187,115 @@ export const saveSelectedCompany = async (userId, companyName) => {
   } catch (error) {
     console.error("❌ Error saving selected company:", error);
     return { success: false, error: error.message };
+  }
+};
+
+export const getUserProfile = async (userId) => {
+
+  let profile = {};
+  try {
+   
+    const docRef = doc(db, "placemate-user-profile", userId);
+    const snap = await getDoc(docRef);
+    profile = snap.exists() ? snap.data() : {};
+  } catch (profileErr) {
+    console.warn("⚠️ [getUserProfile] Could not fetch profile metadata (permissions):", profileErr.code || profileErr.message);
+  }
+
+  // Step 2: Fetch resume links; gracefully handle permission errors
+  let resumeLinks = [];
+  try {
+
+    const resume_userId = `resume_${userId}`; // Assuming n8n uses this pattern for resume links
+    
+     const linksQuery = query(
+      collection(db, "user-resume-link"),
+      where("name", "==", resume_userId),
+    );
+    
+    const linksSnap = await getDocs(linksQuery);
+    
+    if (linksSnap.empty) {
+      console.warn("⚠️ [getUserProfile] No resume links found for userId:", resume_userId);
+    }
+
+    linksSnap.forEach((resumeDoc, index) => {
+      const data = resumeDoc.data() || {};
+     
+      
+      const link = data.webLink || "";
+      
+      
+      if (!link) {
+        console.warn(`   └─ ⚠️ No valid link found in document, skipping`);
+        return;
+      }
+
+      const resumeItem = {
+        id: resumeDoc.id,
+        link,
+        label: data.label || data.title || data.name || `Resume ${resumeLinks.length + 1}`,
+        updatedAt: data.updatedAt || data.createdAt || data.timestamp || "",
+      };
+  
+      resumeLinks.push(resumeItem);
+    });
+    
+    // console.log("✅ [getUserProfile] Resume links fetch complete. Total links found:", resumeLinks.length);
+  } catch (linkErr) {
+    console.warn("⚠️ [getUserProfile] Could not fetch resume links:", linkErr.code || linkErr.message);
+    console.warn("   Error details:", linkErr);
+    // Non-fatal: profile still loads without links
+  }
+
+  // Return result with both profile and resume links
+  const result = {
+    ...profile,
+    resumeLinks,
+    resumeUrl: resumeLinks[0]?.link || profile.resumeUrl || null,
+  };
+  // console.log("📤 [getUserProfile] Returning profile result:", result);
+  return result;
+};
+
+export const updateUserProfile = async (userId, updates = {}) => {
+  try {
+    const sanitizedUpdates = { ...updates };
+    delete sanitizedUpdates.file;
+
+    await setDoc(
+      doc(db, "placemate-user-profile", userId),
+      { ...sanitizedUpdates, username: userId },
+      { merge: true },
+    );
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Error updating user profile:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const getUserResumeLinks = async (userId) => {
+  try {
+    const resume_userId = `user_${userId}`;
+    const linksQuery = query(
+      collection(db, "user-resume-link"),
+      where("name", "==", resume_userId),
+    );
+    const linksSnap = await getDocs(linksQuery);
+    return linksSnap.docs
+      .map((resumeDoc) => {
+        const data = resumeDoc.data() || {};
+        return {
+          id: resumeDoc.id,
+          link: data.link || data.resume_url || data.resumeUrl || data.drive_link || data.url || "",
+          label: data.label || data.title || data.name || resumeDoc.id,
+          updatedAt: data.updatedAt || data.createdAt || data.timestamp || "",
+        };
+      })
+      .filter((item) => item.link);
+  } catch (error) {
+    console.warn("⚠️ Could not fetch user resume links (permissions):", error.message);
+    return [];
   }
 };

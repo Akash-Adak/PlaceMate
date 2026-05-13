@@ -18,7 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Navbar from '../components/Navbar';
 import ResumePanel from '../components/sections/ResumePanel';
-import { uploadResume, getUserResults, saveSelectedCompany } from '../services/resumeService';
+import { uploadResume, getUserResults, saveSelectedCompany, getUserProfile } from '../services/resumeService';
 import { basicCompanyCatalog } from '../data/mockCompanies';
 
 const ResumeParsing = () => {
@@ -32,6 +32,7 @@ const ResumeParsing = () => {
   const [parsedData, setParsedData] = useState(null);
   const [onboardingMode, setOnboardingMode] = useState('choice');
   const [isLoadingPersistent, setIsLoadingPersistent] = useState(true);
+  const [profileData, setProfileData] = useState(null);
   const [companySearch, setCompanySearch] = useState('');
   const [selectedBasicsCompany, setSelectedBasicsCompany] = useState('');
   const [showAllBasicsCompanies, setShowAllBasicsCompanies] = useState(false);
@@ -70,6 +71,12 @@ const ResumeParsing = () => {
         if (existingData) {
           setHasUploaded(true);
           setParsedData(existingData);
+        }
+        try {
+          const prof = await getUserProfile(user.uid);
+          setProfileData(prof || {});
+        } catch (e) {
+          console.warn('Could not load user profile for subscription check', e);
         }
         setIsLoadingPersistent(false);
       }
@@ -602,7 +609,8 @@ const ResumeParsing = () => {
                   
                   <div className="grid grid-cols-1 gap-8">
                     {parsedData.companies.map((company, i) => {
-                      const isFreeAccess = i === 0;
+                      const isPro = profileData?.subscription?.status === 'active' || (profileData?.tier && profileData.tier.toLowerCase() === 'pro');
+                      const isFreeAccess = isPro || i === 0;
 
                       return (
                       <motion.div

@@ -1,4 +1,4 @@
-export { uploadResume, getUserResults, saveUserResults, saveSelectedCompany } from "./resumeStorageService";
+export { uploadResume, getUserResults, saveUserResults, saveSelectedCompany, getUserProfile, updateUserProfile } from "./resumeStorageService";
 export { generateCompanyPlan } from "./companyPlanService";
 export { generateQuestions, submitAnswer } from "./questionService";
 export { getUserProgress } from "./progressService";
