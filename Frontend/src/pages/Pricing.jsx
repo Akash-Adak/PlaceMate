@@ -2,12 +2,31 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, ArrowRight, Zap, Shield, Crown, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { payWithRazorpay } from '../services/payment';
+import { getUserProfile } from '../services/resume';
+import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import { useTheme } from '../context/ThemeContext';
 
 const Pricing = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { isDark } = useTheme();
+
+  const [currentTier, setCurrentTier] = useState('Basic');
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.uid) return;
+      try {
+        const p = await getUserProfile(user.uid);
+        setCurrentTier(p?.tier || (p?.subscription?.plan ? (p.subscription.plan === 'pro' ? 'Pro' : p.subscription.plan) : 'Basic'));
+      } catch (e) {
+        console.warn('Could not load profile for pricing', e);
+      }
+    };
+    loadProfile();
+  }, [user]);
 
   const plans = [
     {
@@ -21,9 +40,7 @@ const Pricing = () => {
         'Unlock 1 Detailed Company Prep Plan',
         'Basic Progress Tracking'
       ],
-      buttonText: 'Current Plan',
       isPopular: false,
-      buttonAction: () => navigate('/dashboard')
     },
     {
       name: 'Pro',
@@ -38,9 +55,7 @@ const Pricing = () => {
         'Priority AI Processing',
         'Direct HR Referrals (Coming Soon)'
       ],
-      buttonText: 'Upgrade to Pro',
       isPopular: true,
-      buttonAction: () => console.log('Upgrade to Pro')
     },
     {
       name: 'Enterprise',
@@ -54,9 +69,7 @@ const Pricing = () => {
         'API Access',
         'Dedicated Account Manager'
       ],
-      buttonText: 'Contact Us',
       isPopular: false,
-      buttonAction: () => console.log('Contact Enterprise')
     }
   ];
 
@@ -171,53 +184,75 @@ const Pricing = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-          {plans.map((plan, i) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className={T.card(plan.isPopular)}
-            >
-              {plan.isPopular && (
-                <div className={T.popularBadge}>
-                  Most Popular
-                </div>
-              )}
+          {plans.map((plan, i) => {
+            const isCurrent = currentTier && currentTier.toLowerCase() === plan.name.toLowerCase();
+            const buttonAction = async () => {
+              if (isCurrent) return navigate('/dashboard');
+              if (plan.name === 'Pro') {
+                try {
+                  if (!user) return navigate('/login');
+                  const res = await payWithRazorpay({ user, amount: 10, plan: 'Pro' });
+                  if (res?.success) navigate('/profile');
+                } catch (err) {
+                  console.error('Payment failed', err);
+                  alert('Payment failed. Please try again.');
+                }
+                return;
+              }
+              if (plan.name === 'Enterprise') return alert('Contact us for Enterprise plans');
+              return navigate('/dashboard');
+            };
 
-              <div className="mb-8">
-                <div className={T.iconWrapper(plan.isPopular)}>
-                  <plan.icon size={24} />
-                </div>
-                <h3 className={T.planName}>{plan.name}</h3>
-                <p className={T.planDesc}>{plan.description}</p>
-              </div>
+            const buttonText = isCurrent ? 'Current Plan' : plan.name === 'Pro' ? 'Upgrade to Pro' : plan.buttonText || 'Choose';
 
-              <div className="mb-8">
-                <span className={T.price}>{plan.price}</span>
-                {plan.period && <span className={T.pricePeriod}>{plan.period}</span>}
-              </div>
-
-              <ul className="space-y-4 mb-10 flex-1">
-                {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-3">
-                    <div className={T.featureIcon(plan.isPopular)}>
-                      <Check size={12} className={T.featureCheck(plan.isPopular)} />
-                    </div>
-                    <span className={T.featureText}>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <button 
-                onClick={plan.buttonAction}
-                className={T.button(plan.isPopular)}
+            return (
+              <motion.div
+                key={plan.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className={T.card(plan.isPopular)}
               >
-                {plan.buttonText}
-                <ArrowRight size={14} />
-              </button>
-            </motion.div>
-          ))}
+                {plan.isPopular && (
+                  <div className={T.popularBadge}>
+                    Most Popular
+                  </div>
+                )}
+
+                <div className="mb-8">
+                  <div className={T.iconWrapper(plan.isPopular)}>
+                    <plan.icon size={24} />
+                  </div>
+                  <h3 className={T.planName}>{plan.name}</h3>
+                  <p className={T.planDesc}>{plan.description}</p>
+                </div>
+
+                <div className="mb-8">
+                  <span className={T.price}>{plan.price}</span>
+                  {plan.period && <span className={T.pricePeriod}>{plan.period}</span>}
+                </div>
+
+                <ul className="space-y-4 mb-10 flex-1">
+                  {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-3">
+                      <div className={T.featureIcon(plan.isPopular)}>
+                        <Check size={12} className={T.featureCheck(plan.isPopular)} />
+                      </div>
+                      <span className={T.featureText}>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button 
+                  onClick={buttonAction}
+                  className={T.button(plan.isPopular)}
+                >
+                  {buttonText}
+                  <ArrowRight size={14} />
+                </button>
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Trust Badge */}

@@ -12,6 +12,7 @@ const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
+  const [tier, setTier] = useState('Basic');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -22,6 +23,7 @@ const Profile = () => {
       setProfile(p || {});
       setDisplayName(user.displayName || "");
       setBio((p && p.bio) || "");
+      setTier((p && (p.tier || (p.subscription && p.subscription.plan))) || 'Basic');
     };
     load();
   }, [user]);
@@ -29,7 +31,7 @@ const Profile = () => {
   const onSave = async () => {
     if (!user?.uid) return;
     setSaving(true);
-    const updates = { displayName, bio };
+    const updates = { displayName, bio, tier };
     const res = await updateUserProfile(user.uid, updates);
     if (res.success) {
       const refreshed = await getUserProfile(user.uid);
@@ -195,7 +197,12 @@ const Profile = () => {
                   </span>
                 </div>
                 <h2 className={T.name}>{displayName || 'Anonymous User'}</h2>
-                <p className={T.email}>{user?.email}</p>
+                  <p className={T.email}>{user?.email}</p>
+                  {profile?.subscription?.status === 'active' && (
+                    <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-[10px] font-black uppercase tracking-widest">
+                      <Sparkles size={14} /> Pro Member
+                    </div>
+                  )}
               </div>
 
               <div className={T.sectionDivider} />
@@ -299,6 +306,8 @@ const Profile = () => {
                     )}
                   </div>
                 </div>
+
+               
 
                 <div className="pt-4 flex justify-center sm:justify-start">
                   <button onClick={onSave} disabled={saving} className={T.button}>
