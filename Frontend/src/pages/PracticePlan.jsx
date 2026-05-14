@@ -29,45 +29,117 @@ const PracticePlan = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedType, setSelectedType] = useState(null);
+  const [showCodingOptions, setShowCodingOptions] = useState(false);
+  const [codingOptions, setCodingOptions] = useState({ language: 'javascript', difficulty: 'medium', topic: '', count: 3 });
+  const selectionKey = `placemate_qselect_${companyName}_${dayNumber}`;
   
   const [answers, setAnswers] = useState({});
   const [submittingIds, setSubmittingIds] = useState(new Set());
 
   const fetchedRef = useRef(false);
+  const initialLoadDone = useRef(false);
 
+  // Load persisted selection (if any) and auto-fetch
   useEffect(() => {
-    const fetchQuestions = async () => {
-      if (!user) return;
-      if (fetchedRef.current) return;
-      fetchedRef.current = true;
-
-      setLoading(true);
-      setError(null);
-
+    if (!user || initialLoadDone.current) return;
+    
+    const loadSavedSelection = async () => {
       try {
-        const result = await generateQuestions(
-          user.uid,
-          companyName,
-          dayNumber,
-        );
-        if (result.success && result.data && result.data.length > 0) {
-          const sorted = result.data.sort((a, b) => a.session - b.session);
-          setQuestions(sorted);
-        } else {
-          setError(result.error || "No questions generated or backend failed.");
+        const raw = localStorage.getItem(selectionKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.type) {
+            setSelectedType(parsed.type);
+            if (parsed.options) setCodingOptions(parsed.options);
+            // Auto-fetch the saved selection
+            await fetchQuestionsFor(parsed.type, parsed.options || {});
+          }
         }
-      } catch (err) {
-        setError(err.message || "An unexpected error occurred.");
-      } finally {
-        setLoading(false);
+        initialLoadDone.current = true;
+      } catch (e) {
+        console.warn('Failed to load saved question selection', e);
+        initialLoadDone.current = true;
       }
     };
+    
+    loadSavedSelection();
+  }, [selectionKey, user]);
 
-    fetchQuestions();
-  }, [companyName, dayNumber, user]);
+  const fetchQuestionsFor = async (type, options = {}) => {
+    if (!user) return;
+    if (fetchedRef.current) {
+      console.log("Already fetched, skipping duplicate fetch");
+      return;
+    }
+    fetchedRef.current = true;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log(`Generating ${type} questions with options:`, options);
+      const result = await generateQuestions(user.uid, companyName, dayNumber, type, options);
+      
+      console.log("Generation result:", result);
+      
+      if (result.success && result.data && result.data.length > 0) {
+        const sorted = result.data.sort((a, b) => a.session - b.session);
+        setQuestions(sorted);
+        setError(null);
+      } else {
+        setError(result.error || "No questions generated or backend failed.");
+        // Reset fetched flag on error so user can retry
+        fetchedRef.current = false;
+      }
+    } catch (err) {
+      console.error("Error generating questions:", err);
+      setError(err.message || "An unexpected error occurred.");
+      // Reset fetched flag on error so user can retry
+      fetchedRef.current = false;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAnswerChange = (qId, value) => {
     setAnswers((prev) => ({ ...prev, [qId]: value }));
+  };
+
+  const handleSelectNormal = async () => {
+    if (!user) return setError('Please sign in to generate questions');
+    if (!user) return;
+    
+    // Reset fetched flag to allow new generation
+    fetchedRef.current = false;
+    setSelectedType('normal');
+    setShowCodingOptions(false);
+    setQuestions([]); // Clear existing questions
+    await fetchQuestionsFor('normal');
+    
+    try {
+      localStorage.setItem(selectionKey, JSON.stringify({ type: 'normal', options: {} }));
+    } catch (e) { /* ignore */ }
+  };
+
+  const handleOpenCoding = () => {
+    setSelectedType('coding');
+    setShowCodingOptions(true);
+  };
+
+  const handleConfirmCoding = async () => {
+    if (!user) return setError('Please sign in to generate questions');
+    if (!user) return;
+    
+    // Reset fetched flag to allow new generation
+    fetchedRef.current = false;
+    setShowCodingOptions(false);
+    setQuestions([]); // Clear existing questions
+    await fetchQuestionsFor('coding', codingOptions);
+    
+    try {
+      localStorage.setItem(selectionKey, JSON.stringify({ type: 'coding', options: codingOptions }));
+    } catch (e) { /* ignore */ }
   };
 
   const handleSubmitAnswer = async (question) => {
@@ -84,10 +156,13 @@ const PracticePlan = () => {
             q.id === question.id ? { ...q, evaluation: result.data } : q
           )
         );
+        // Clear the answer after successful submission if needed
+        // setAnswers((prev) => ({ ...prev, [question.id]: "" }));
       } else {
         alert(result.error || "Failed to submit answer.");
       }
     } catch (err) {
+      console.error("Error submitting answer:", err);
       alert("Error submitting answer.");
     } finally {
       setSubmittingIds((prev) => {
@@ -96,6 +171,17 @@ const PracticePlan = () => {
         return newSet;
       });
     }
+  };
+
+  const handleMarkComplete = async (question) => {
+    // You can implement marking individual questions as complete
+    // For now, this is just a UI placeholder
+    console.log("Mark question complete:", question.id);
+  };
+
+  const handleCompleteDay = () => {
+    // Navigate back to plan
+    navigate(`/plan/${companyName}`);
   };
 
   /* ── Theme tokens ────────────────────────────────────────────── */
@@ -321,14 +407,94 @@ const PracticePlan = () => {
               {error}
             </p>
             <button
-              onClick={() => navigate(`/plan/${companyName}`)}
+              onClick={() => {
+                // Reset and allow retry
+                fetchedRef.current = false;
+                setError(null);
+                setSelectedType(null);
+                setQuestions([]);
+              }}
               className={T.errorButton}
             >
-              Return to Prep Plan
+              Try Again
             </button>
           </div>
         ) : (
-          questions.length > 0 && (
+          (questions.length === 0) ? (
+            <div className="max-w-xl mx-auto py-12">
+              <h2 className="text-lg font-black mb-3">Choose question type for Day {dayNumber}</h2>
+              <p className="text-sm text-slate-500 mb-6">Select Normal for concept/behavioral questions or Coding for DSA and hands-on problems.</p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSelectNormal}
+                  className={"px-5 py-3 rounded-lg font-black " + (isDark ? "bg-amber-500 text-black" : "bg-indigo-600 text-white")}
+                >
+                  Normal
+                </button>
+
+                <button
+                  onClick={handleOpenCoding}
+                  className={"px-5 py-3 rounded-lg font-black " + (isDark ? "bg-white/5 text-white border border-white/5" : "bg-white border border-indigo-100 text-indigo-600")}
+                >
+                  Coding
+                </button>
+              </div>
+
+              {showCodingOptions && (
+                <div className="mt-6 p-4 rounded-xl border bg-white/5">
+                  <div className="flex gap-3 mb-3">
+                    <select
+                      value={codingOptions.language}
+                      onChange={(e) => setCodingOptions({ ...codingOptions, language: e.target.value })}
+                      className={`p-2 rounded-md border ${isDark ? "bg-black border-white/10" : "bg-white border-indigo-200"}`}
+                    >
+                      <option value="javascript">JavaScript</option>
+                      <option value="python">Python</option>
+                      <option value="java">Java</option>
+                      <option value="cpp">C++</option>
+                    </select>
+
+                    <select
+                      value={codingOptions.difficulty}
+                      onChange={(e) => setCodingOptions({ ...codingOptions, difficulty: e.target.value })}
+                      className={`p-2 rounded-md border ${isDark ? "bg-black border-white/10" : "bg-white border-indigo-200"}`}
+                    >
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                    </select>
+
+                    <input
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={codingOptions.count}
+                      onChange={(e) => setCodingOptions({ ...codingOptions, count: Math.max(1, parseInt(e.target.value || '1')) })}
+                      className={`p-2 rounded-md border w-20 ${isDark ? "bg-black border-white/10" : "bg-white border-indigo-200"}`}
+                    />
+                  </div>
+
+                  <input
+                    type="text"
+                    placeholder="Topic (optional)"
+                    value={codingOptions.topic}
+                    onChange={(e) => setCodingOptions({ ...codingOptions, topic: e.target.value })}
+                    className={`w-full p-2 rounded-md border mb-3 ${isDark ? "bg-black border-white/10" : "bg-white border-indigo-200"}`}
+                  />
+
+                  <div className="flex gap-2">
+                    <button onClick={handleConfirmCoding} className={isDark ? "px-4 py-2 bg-amber-500 text-black rounded-md font-bold" : "px-4 py-2 bg-indigo-600 text-white rounded-md font-bold"}>
+                      Generate Coding
+                    </button>
+                    <button onClick={() => setShowCodingOptions(false)} className={`px-4 py-2 rounded-md border ${isDark ? "border-white/10" : "border-indigo-200"}`}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -341,11 +507,11 @@ const PracticePlan = () => {
                   </span>
                   <span className={T.timeBadge}>
                     <Clock size={12} className={isDark ? "text-amber-500" : "text-indigo-600"} />{" "}
-                    {questions[0].estimated_total_time || "N/A"}
+                    {questions[0]?.estimated_total_time || "N/A"}
                   </span>
                 </div>
                 <h1 className={T.headerTitle}>
-                  {questions[0].day_title || "Practice Session"}
+                  {questions[0]?.day_title || "Practice Session"}
                 </h1>
                 <p className={T.headerDesc}>
                   Complete these practice questions to solidify your
@@ -459,8 +625,8 @@ const PracticePlan = () => {
                         <div className="flex justify-end mt-4">
                           <button
                             onClick={() => handleSubmitAnswer(q)}
-                            disabled={submittingIds.has(q.id) || !answers[q.id]}
-                            className={T.submitButton(submittingIds.has(q.id) || !answers[q.id])}
+                            disabled={submittingIds.has(q.id) || !answers[q.id]?.trim()}
+                            className={T.submitButton(submittingIds.has(q.id) || !answers[q.id]?.trim())}
                           >
                             {submittingIds.has(q.id) ? (
                               <>
@@ -488,7 +654,10 @@ const PracticePlan = () => {
                           </a>
                         )}
                       </div>
-                      <button className={T.markCompleteButton}>
+                      <button 
+                        onClick={() => handleMarkComplete(q)}
+                        className={T.markCompleteButton}
+                      >
                         <CheckCircle2 size={14} /> Mark Complete
                       </button>
                     </div>
@@ -498,7 +667,7 @@ const PracticePlan = () => {
 
               <div className="mt-16 text-center">
                 <button
-                  onClick={() => navigate(`/plan/${companyName}`)}
+                  onClick={handleCompleteDay}
                   className={T.completeDayButton}
                 >
                   Complete Day {dayNumber}
