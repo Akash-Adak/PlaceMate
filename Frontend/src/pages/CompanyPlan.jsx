@@ -27,6 +27,8 @@ const CompanyPlan = () => {
   const [loadingStep, setLoadingStep] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [daySelections, setDaySelections] = useState({});
+  const [dayCodingOptions, setDayCodingOptions] = useState({});
 
   // Update current time every minute for countdowns
   useEffect(() => {
@@ -96,6 +98,25 @@ const CompanyPlan = () => {
   useEffect(() => {
     fetchPlanAndProgress(false);
   }, [companyName, user]);
+
+  // Load saved per-day selections (normal/coding) from localStorage when plan loads
+  useEffect(() => {
+    if (!plan || !plan.days) return;
+    const map = {};
+    const optsMap = {};
+    plan.days.forEach(d => {
+      try {
+        const raw = localStorage.getItem(`placemate_qselect_${companyName}_${d.day_number}`);
+        if (raw) map[d.day_number] = JSON.parse(raw).type || null;
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.options) optsMap[d.day_number] = parsed.options;
+        }
+      } catch (e) { /* ignore */ }
+    });
+    setDaySelections(map);
+    setDayCodingOptions(optsMap);
+  }, [plan, companyName]);
 
   useEffect(() => {
     if (!loading) return;
@@ -355,7 +376,7 @@ const CompanyPlan = () => {
       : "text-sm text-slate-500 italic max-w-md md:text-right",
     
     dayButton: (isComplete) => isDark
-      ? `px-6 py-2 font-black uppercase text-[10px] tracking-widest rounded-xl transition-colors shadow-lg flex items-center gap-2 ${isComplete ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30' : 'bg-white text-black hover:bg-amber-500'}`
+      ? `px-6 py-2 font-black uppercase text-[10px] tracking-widest rounded-xl transition-colors shadow-lg flex items-center gap-2 ${isComplete ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30' : 'bg-amber-500 text-black hover:bg-amber-600'}`
       : `px-6 py-2 font-black uppercase text-[10px] tracking-widest rounded-xl transition-colors shadow-sm flex items-center gap-2 ${isComplete ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`,
     
     lockedButton: () => isDark
@@ -677,14 +698,44 @@ const CompanyPlan = () => {
                           </div>
                           <div className="flex flex-col md:items-end gap-3 mt-4 md:mt-0">
                             <p className={T.dayTheme}>{day.theme}</p>
-                            {isUnlocked ? (
-                              <button 
-                                onClick={() => navigate(`/practice/${companyName}/${day.day_number}`)}
-                                className={T.dayButton(isCurrentDayComplete)}
-                              >
-                                {isCurrentDayComplete ? 'Review Day' : `Practice Day ${day.day_number}`}
-                              </button>
-                            ) : isTimeLocked && timeRemaining ? (
+                           {isUnlocked ? (
+                              <div className="flex items-center gap-2">
+                                <select
+                                  value={daySelections[day.day_number] || 'choose'}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    setDaySelections(prev => ({ ...prev, [day.day_number]: value }));
+                                    try {
+                                      if (value !== 'choose') {
+                                        localStorage.setItem(`placemate_qselect_${companyName}_${day.day_number}`, JSON.stringify({ type: value, options: {} }));
+                                      } else {
+                                        localStorage.removeItem(`placemate_qselect_${companyName}_${day.day_number}`);
+                                      }
+                                    } catch (err) {}
+                                  }}
+                                  className={
+                                    isDark 
+                                      ? `px-3 py-2 rounded-lg border focus:outline-none transition-colors cursor-pointer
+                                        bg-[#1a1a1a] border-amber-500/30 text-amber-400 
+                                        hover:bg-amber-500/10 focus:border-amber-500 focus:ring-1 focus:ring-amber-500`
+                                      : `px-3 py-2 rounded-lg border focus:outline-none transition-colors cursor-pointer
+                                        bg-indigo-50 border-indigo-300 text-indigo-700 
+                                        hover:bg-indigo-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500`
+                                  }
+                                >
+                                  <option value="choose" disabled className={isDark ? "bg-[#0a0a0a] text-slate-500" : "bg-white text-slate-500"}>Choose type</option>
+                                  <option value="normal" className={isDark ? "bg-[#0a0a0a] text-amber-400" : "bg-white text-indigo-600"}>📝 Normal</option>
+                                  <option value="coding" className={isDark ? "bg-[#0a0a0a] text-amber-400" : "bg-white text-indigo-600"}>💻 Coding</option>
+                                </select>
+
+                                <button 
+                                  onClick={() => navigate(`/practice/${companyName}/${day.day_number}`)}
+                                  className={T.dayButton(isCurrentDayComplete)}
+                                >
+                                  {isCurrentDayComplete ? 'Review Day' : `Practice Day ${day.day_number}`}
+                                </button>
+                              </div>
+                            ) :  isTimeLocked && timeRemaining ? (
                               <div className={T.lockedButton()}>
                                 <Hourglass size={12} /> 
                                 Unlocks in {timeRemaining.hours}h {timeRemaining.minutes}m

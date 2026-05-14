@@ -5,14 +5,19 @@ import { db } from "../../firebase";
 import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { VITE_N8N_ANSWER_TARGET, VITE_N8N_QUESTION_TARGET, getN8nProxyUrl } from "./shared";
 
-export const generateQuestions = async (userId, companyName, dayNumber) => {
+export const generateQuestions = async (userId, companyName, dayNumber, questionType = 'all', options = {}) => {
   try {
     // 1. Check if questions already exist in Firestore
+    // Use questionType and options as part of the cache key so different
+    // generation requests (normal vs coding or different options) are stored separately.
+    const optionsSerialized = JSON.stringify(options || {});
     const q = query(
       collection(db, "placemate-user-questions"),
       where("username", "==", userId),
       where("target_company", "==", companyName),
       where("day", "==", parseInt(dayNumber)),
+      where("request_type", "==", questionType),
+      where("request_options", "==", optionsSerialized),
     );
 
     const querySnapshot = await getDocs(q);
@@ -28,14 +33,45 @@ export const generateQuestions = async (userId, companyName, dayNumber) => {
       return { success: true, data: questions };
     }
 
+    // Fallback: if no exact-match cache found (type/options), try a generic cache
+    // for the same user/company/day and filter it locally so older cached
+    // entries (created before request metadata existed) can still be reused.
+    const genericQ = query(
+      collection(db, "placemate-user-questions"),
+      where("username", "==", userId),
+      where("target_company", "==", companyName),
+      where("day", "==", parseInt(dayNumber)),
+    );
+    const genericSnapshot = await getDocs(genericQ);
+    if (!genericSnapshot.empty) {
+      console.log(`ℹ️ Using generic cached questions (no type match).`);
+      const allCached = [];
+      genericSnapshot.forEach((doc) => allCached.push({ docId: doc.id, ...doc.data() }));
+
+      // Apply same filtering rules as generation to satisfy the requested type
+      let filtered = allCached;
+      if (questionType === 'normal') {
+        filtered = allCached.filter(q => q.type === 'concept' || q.type === 'applied' || q.type === 'hands_on');
+      } else if (questionType === 'coding') {
+        filtered = allCached.filter(q => q.type === 'dsa' || q.type === 'hands_on');
+      }
+
+      if (filtered.length > 0) {
+        return { success: true, data: filtered };
+      }
+      // else continue to n8n generation below
+    }
+
     // 2. Not found, fetch from n8n
     const baseUrl = getN8nProxyUrl(VITE_N8N_QUESTION_TARGET);
-    const url = `${baseUrl}?userId=${userId}&companyName=${encodeURIComponent(companyName)}&dayNumber=${dayNumber}`;
+    // Attach options as an encoded JSON query param so n8n can read it easily
+    const encodedOptions = encodeURIComponent(JSON.stringify(options || {}));
+    const url = `${baseUrl}?userId=${userId}&companyName=${encodeURIComponent(companyName)}&dayNumber=${dayNumber}&questionType=${questionType}&questionOptions=${encodedOptions}`;
 
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, companyName, dayNumber }),
+      body: JSON.stringify({ userId, companyName, dayNumber, questionType, questionOptions: options }),
     });
 
     if (!response.ok) {
@@ -105,6 +141,10 @@ export const generateQuestions = async (userId, companyName, dayNumber) => {
     const questionsCollection = collection(db, "placemate-user-questions");
     await Promise.all(
       cleanedQuestions.map(async (q) => {
+        // Attach request metadata so cached queries can be exact matches later
+        q.request_type = questionType;
+        q.request_options = optionsSerialized;
+
         // Auto-generate a document ID for each question
         const newDocRef = doc(questionsCollection);
         q.docId = newDocRef.id; // Assign ID to the local object so the UI can use it
@@ -113,7 +153,21 @@ export const generateQuestions = async (userId, companyName, dayNumber) => {
     );
     console.log(`✅ Saved ${cleanedQuestions.length} AI generated questions to Firestore cache.`);
 
-    return { success: true, data: cleanedQuestions };
+    // Filter by question type if specified
+    let filteredQuestions = cleanedQuestions;
+    if (questionType === 'normal') {
+      // Normal questions: concept and applied
+      filteredQuestions = cleanedQuestions.filter(q => 
+        q.type === 'concept' || q.type === 'applied' || q.type === 'hands_on'
+      );
+    } else if (questionType === 'coding') {
+      // Coding questions: dsa and hands_on
+      filteredQuestions = cleanedQuestions.filter(q => 
+        q.type === 'dsa' || q.type === 'hands_on'
+      );
+    }
+
+    return { success: true, data: filteredQuestions };
   } catch (error) {
     console.error("Question Generation Error:", error);
     return { success: false, error: error.message };

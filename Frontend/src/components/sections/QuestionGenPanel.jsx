@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { generateQuestions } from '../../services/resume';
-import { Sparkles, Brain, Zap, Target, BookOpen, TrendingUp, AlertCircle, ChevronRight, CheckCircle } from 'lucide-react';
+import { Sparkles, Brain, Zap, Target, BookOpen, TrendingUp, AlertCircle, ChevronRight, CheckCircle, Code } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
 const loadingStages = [
@@ -18,6 +18,14 @@ const QuestionGenPanel = ({ user, parsedData }) => {
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState(null);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [currentType, setCurrentType] = useState(null);
+  const [showCodingOptions, setShowCodingOptions] = useState(false);
+  const [codingOptions, setCodingOptions] = useState({
+    language: 'javascript',
+    difficulty: 'medium',
+    topic: '',
+    count: 3,
+  });
 
   useEffect(() => {
     if (!loading) return;
@@ -29,15 +37,16 @@ const QuestionGenPanel = ({ user, parsedData }) => {
     return () => window.clearInterval(timer);
   }, [loading]);
 
-  const handleGenerate = async () => {
+  const handleGenerateQuestions = async (questionType, options = {}) => {
     if (!user?.uid) return setError('Please sign in to generate questions');
     const companyName = parsedData?.companies?.[0]?.name || 'General';
     setLoading(true);
     setLoadingStep(0);
     setError(null);
     setQuestions([]);
+    setCurrentType(questionType);
     try {
-      const res = await generateQuestions(user.uid, companyName, 1);
+      const res = await generateQuestions(user.uid, companyName, 1, questionType, options);
       if (res.success) setQuestions(res.data || []);
       else setError(res.error || 'Failed to generate');
     } catch (err) {
@@ -45,6 +54,20 @@ const QuestionGenPanel = ({ user, parsedData }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGenerateNormal = () => {
+    setShowCodingOptions(false);
+    handleGenerateQuestions('normal');
+  };
+
+  const openCodingOptions = () => {
+    setShowCodingOptions(true);
+  };
+
+  const handleConfirmGenerateCoding = async () => {
+    setShowCodingOptions(false);
+    await handleGenerateQuestions('coding', codingOptions);
   };
 
   /* ── Theme tokens ────────────────────────────────────────────── */
@@ -172,23 +195,133 @@ const QuestionGenPanel = ({ user, parsedData }) => {
           Create targeted practice questions based on your profile, project depth, and target company fit.
         </p>
 
-        <button
-          onClick={handleGenerate}
-          className={T.button}
-          disabled={loading}
-        >
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full border-2 ${T.loadingSpinner} animate-spin`} />
-              Generating Questions...
-            </span>
-          ) : (
-            <span className="flex items-center gap-2">
-              <Zap size={14} />
-              Generate Sample Questions
-            </span>
-          )}
-        </button>
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <button
+            onClick={handleGenerateNormal}
+            className={T.button}
+            disabled={loading}
+            title="Generate behavioral and conceptual interview questions"
+          >
+            {loading && currentType === 'normal' ? (
+              <span className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full border-2 ${T.loadingSpinner} animate-spin`} />
+                Generating...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2 justify-center">
+                <Brain size={14} />
+                <span className="text-center">Normal</span>
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={openCodingOptions}
+            className={T.button}
+            disabled={loading}
+            title="Open coding options"
+          >
+            {loading && currentType === 'coding' ? (
+              <span className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full border-2 ${T.loadingSpinner} animate-spin`} />
+                Generating...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2 justify-center">
+                <Code size={14} />
+                <span className="text-center">Coding</span>
+              </span>
+            )}
+          </button>
+        </div>
+
+        {showCodingOptions && (
+          <div className={`p-4 rounded-xl border ${isDark ? 'border-white/5 bg-white/[0.02]' : 'border-indigo-100 bg-white'} mb-4`}>
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="flex-1">
+                <label className="text-xs font-black uppercase tracking-wider mb-1">Language</label>
+                <select
+                  value={codingOptions.language}
+                  onChange={(e) => setCodingOptions({ ...codingOptions, language: e.target.value })}
+                  className="w-full p-2 rounded-md border"
+                  disabled={loading}
+                >
+                  <option value="javascript">JavaScript</option>
+                  <option value="python">Python</option>
+                  <option value="java">Java</option>
+                  <option value="cpp">C++</option>
+                </select>
+              </div>
+
+              <div className="w-36">
+                <label className="text-xs font-black uppercase tracking-wider mb-1">Difficulty</label>
+                <select
+                  value={codingOptions.difficulty}
+                  onChange={(e) => setCodingOptions({ ...codingOptions, difficulty: e.target.value })}
+                  className="w-full p-2 rounded-md border"
+                  disabled={loading}
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+
+              <div className="w-24">
+                <label className="text-xs font-black uppercase tracking-wider mb-1">Count</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={codingOptions.count}
+                  onChange={(e) => setCodingOptions({ ...codingOptions, count: Math.max(1, parseInt(e.target.value || '1')) })}
+                  className="w-full p-2 rounded-md border"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div className="mt-3">
+              <label className="text-xs font-black uppercase tracking-wider mb-1">Topic (optional)</label>
+              <input
+                type="text"
+                placeholder="e.g. arrays, graphs, dynamic programming"
+                value={codingOptions.topic}
+                onChange={(e) => setCodingOptions({ ...codingOptions, topic: e.target.value })}
+                className="w-full p-2 rounded-md border"
+                disabled={loading}
+              />
+            </div>
+
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                className={T.button}
+                onClick={handleConfirmGenerateCoding}
+                disabled={loading}
+              >
+                {loading && currentType === 'coding' ? (
+                  <span className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full border-2 ${T.loadingSpinner} animate-spin`} />
+                    Generating...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Zap size={14} />
+                    Generate Coding
+                  </span>
+                )}
+              </button>
+
+              <button
+                className="px-3 py-2 rounded-md border bg-transparent text-sm"
+                onClick={() => setShowCodingOptions(false)}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         {loading && (
           <div className={T.loadingContainer}>
