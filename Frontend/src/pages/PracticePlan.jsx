@@ -306,6 +306,15 @@ const PracticePlan = () => {
     hintBox: isDark
       ? "flex items-start gap-3 bg-blue-500/5 border border-blue-500/10 rounded-xl p-5 mb-6"
       : "flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl p-5 mb-6",
+       
+  codingTitleBox: isDark
+    ? "bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-4 mb-4 hover:border-purple-500/40 transition-all"
+    : "bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4 mb-4 hover:border-purple-400 transition-all",
+  
+  codingTitleText: isDark
+    ? "text-white text-base font-bold leading-relaxed"
+    : "text-slate-800 text-base font-bold leading-relaxed",
+  
     
     hintTitle: isDark
       ? "text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1"
@@ -542,27 +551,66 @@ const PracticePlan = () => {
                     <h3 className={T.topicHeader}>
                       <Layout size={14} /> {q.topic}
                     </h3>
+          {/* For coding questions - show title */}
+                  {/* For coding questions - show title with clickable editor link */}
+{(q.type === 'dsa' || q.type === 'coding' || q.type === 'hands_on') && q.title && (
+  <div 
+    onClick={() => navigate(`/editor/${q.docId}`, { state: { question: q } })}
+    className={`${T.codingTitleBox} cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg`}
+  >
+    <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center gap-2">
+        <Code size={14} className="text-purple-500" />
+        <span className="text-[10px] font-black uppercase tracking-wider text-purple-500">
+          Coding Challenge
+        </span>
+      </div>
+      
+      {/* Editor Link Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent double navigation
+          navigate(`/editor/${q.docId}`, { state: { question: q } });
+        }}
+        className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-md"
+      >
+        <Code size={12} />
+        Open Editor
+        <ChevronRight size={12} />
+      </button>
+    </div>
+    
+    <p className={T.codingTitleText}>
+      {q.title}
+    </p>
+    
+    {/* Optional: Add a subtle hint that it's clickable */}
+    <div className="mt-2 text-[9px] text-purple-400/60 flex items-center gap-1">
+      <span>Click anywhere to start coding</span>
+    </div>
+  </div>
+)}
 
-                    <div className={T.questionBox}>
-                      <p className={T.questionText}>
-                        {q.question}
-                      </p>
-                    </div>
+{/* For coding questions - show description */}
+{(q.type === 'dsa' || q.type === 'coding' || q.type === 'hands_on') && q.description && (
+  <div className={T.questionBox}>
+    <p className={T.questionText}>
+      {q.description}
+    </p>
+  </div>
+)}
 
-                    {q.link && (
-                      <div className={T.linkBox}>
-                        <a
-                          href={q.link}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={T.linkText}
-                        >
-                          {q.link}
-                        </a>
-                      </div>
-                    )}
+{/* For normal questions - show full question */}
+{(!q.type || (q.type !== 'dsa' && q.type !== 'coding' && q.type !== 'hands_on')) && (
+  <div className={T.questionBox}>
+    <p className={T.questionText}>
+      {q.question}
+    </p>
+  </div>
+)}
+                   
 
-                    {q.hint && (
+                    {q.hint && q.type !== 'dsa' && q.type !== 'hands_on' && (
                       <div className={T.hintBox}>
                         <Lightbulb
                           size={18}
@@ -614,7 +662,7 @@ const PracticePlan = () => {
                           )}
                         </div>
                       </motion.div>
-                    ) : (
+                    ) : q.type !== 'dsa' && q.type !== 'hands_on' ? (
                       <div className="mt-6 mb-6">
                         <textarea
                           value={answers[q.id] || ""}
@@ -639,21 +687,11 @@ const PracticePlan = () => {
                           </button>
                         </div>
                       </div>
-                    )}
+                    ) : null
+                    }
 
                     <div className="flex flex-wrap items-center gap-4 justify-between pt-6 border-t border-indigo-100">
-                      <div className="flex items-center gap-2">
-                        {q.resource_url && (
-                          <a
-                            href={q.resource_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={T.resourceLink}
-                          >
-                            <BookOpen size={14} /> Review Topic
-                          </a>
-                        )}
-                      </div>
+                      
                       <button 
                         onClick={() => handleMarkComplete(q)}
                         className={T.markCompleteButton}
