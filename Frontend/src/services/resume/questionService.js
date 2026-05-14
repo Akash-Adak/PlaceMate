@@ -204,10 +204,26 @@ export const submitAnswer = async (userId, questionDocId, questionId, userAnswer
       userAnswer: userAnswer,
     };
 
-    // Save the evaluation back to the specific question document in Firestore
+    const savedCode = typeof userAnswer === 'string'
+      ? userAnswer
+      : userAnswer?.code || userAnswer?.userAnswer || '';
+    const savedLanguage = typeof userAnswer === 'object' && userAnswer !== null
+      ? userAnswer.language || ''
+      : '';
+
+    // Save the evaluation and the submitted code back to the specific question document in Firestore
     if (questionDocId) {
       const docRef = doc(db, "placemate-user-questions", questionDocId);
-      await setDoc(docRef, { evaluation: evaluation }, { merge: true });
+      await setDoc(
+        docRef,
+        {
+          evaluation: evaluation,
+          savedCode,
+          savedLanguage,
+          lastSubmittedAt: new Date().toISOString(),
+        },
+        { merge: true },
+      );
       console.log(`✅ Saved AI Evaluation to Firestore for question ${questionId}`);
     }
 

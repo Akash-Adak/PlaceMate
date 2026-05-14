@@ -1,25 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { generateQuestions } from '../../services/resume';
-import { Sparkles, Brain, Zap, Target, BookOpen, TrendingUp, AlertCircle, ChevronRight, CheckCircle, Code } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Sparkles, Brain, Zap, Target, BookOpen, TrendingUp, AlertCircle, ChevronRight, CheckCircle, Code, Play, Trophy, RefreshCw } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
 const loadingStages = [
-  'Reading your resume profile and target company.',
-  'Finding the most relevant topics for practice questions.',
-  'Selecting difficulty, format, and interview focus.',
-  'Building a custom question set from your background.',
-  'Finalizing the questions and prep order.'
+  'Analyzing your coding skills and experience level.',
+  'Selecting optimal coding challenges for your profile.',
+  'Preparing test cases and evaluation criteria.',
+  'Building custom coding problems based on your background.',
+  'Finalizing challenges and setting up the environment.'
 ];
 
 const QuestionGenPanel = ({ user, parsedData }) => {
   const { isDark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState([]);
+  const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [loadingStep, setLoadingStep] = useState(0);
   const [currentType, setCurrentType] = useState(null);
-  const [showCodingOptions, setShowCodingOptions] = useState(false);
+  const [completedQuestions, setCompletedQuestions] = useState({});
+  const [evaluationResults, setEvaluationResults] = useState({});
   const [codingOptions, setCodingOptions] = useState({
     language: 'javascript',
     difficulty: 'medium',
@@ -39,14 +42,16 @@ const QuestionGenPanel = ({ user, parsedData }) => {
 
   const handleGenerateQuestions = async (questionType, options = {}) => {
     if (!user?.uid) return setError('Please sign in to generate questions');
-    const companyName = parsedData?.companies?.[0]?.name || 'General';
     setLoading(true);
     setLoadingStep(0);
     setError(null);
     setQuestions([]);
+    setCompletedQuestions({});
+    setEvaluationResults({});
     setCurrentType(questionType);
     try {
-      const res = await generateQuestions(user.uid, companyName, 1, questionType, options);
+      const res = await generateQuestions(user.uid, '', 1, questionType, options);
+      console.log(res.data);
       if (res.success) setQuestions(res.data || []);
       else setError(res.error || 'Failed to generate');
     } catch (err) {
@@ -56,18 +61,51 @@ const QuestionGenPanel = ({ user, parsedData }) => {
     }
   };
 
-  const handleGenerateNormal = () => {
-    setShowCodingOptions(false);
-    handleGenerateQuestions('normal');
+  const handleGenerateCoding = () => {
+    handleGenerateQuestions('coding', codingOptions);
   };
 
-  const openCodingOptions = () => {
-    setShowCodingOptions(true);
+  const handleMarkComplete = (questionId, evaluation) => {
+    setCompletedQuestions(prev => ({
+      ...prev,
+      [questionId]: !prev[questionId]
+    }));
+    
+    if (evaluation) {
+      setEvaluationResults(prev => ({
+        ...prev,
+        [questionId]: evaluation
+      }));
+    }
   };
 
-  const handleConfirmGenerateCoding = async () => {
-    setShowCodingOptions(false);
-    await handleGenerateQuestions('coding', codingOptions);
+  const getCompletionStats = () => {
+    const total = questions.length;
+    const completed = Object.values(completedQuestions).filter(v => v === true).length;
+    return { total, completed, percentage: total > 0 ? (completed / total) * 100 : 0 };
+  };
+
+  const getAverageScore = () => {
+    const evaluated = Object.values(evaluationResults).filter(v => v && v.score);
+    if (evaluated.length === 0) return null;
+    const avg = evaluated.reduce((sum, val) => sum + val.score, 0) / evaluated.length;
+    return Math.round(avg);
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 80) return isDark ? 'text-emerald-400' : 'text-emerald-600';
+    if (score >= 60) return isDark ? 'text-yellow-400' : 'text-yellow-600';
+    return isDark ? 'text-red-400' : 'text-red-600';
+  };
+
+  const handleQuestionClick = (question) => {
+    navigate(`/editor/${question.docId}`, { 
+      state: { 
+        question: question, 
+        user,
+        onComplete: (evaluation) => handleMarkComplete(question.docId, evaluation)
+      } 
+    });
   };
 
   /* ── Theme tokens ────────────────────────────────────────────── */
@@ -77,8 +115,8 @@ const QuestionGenPanel = ({ user, parsedData }) => {
       : "bg-white border border-indigo-100 rounded-2xl p-6 overflow-hidden relative shadow-lg",
     
     gradient: isDark
-      ? "from-amber-500/5 via-transparent to-transparent"
-      : "from-indigo-500/5 via-transparent to-transparent",
+      ? "from-blue-500/5 via-transparent to-transparent"
+      : "from-blue-500/5 via-transparent to-transparent",
     
     headerText: isDark
       ? "text-slate-500"
@@ -89,25 +127,24 @@ const QuestionGenPanel = ({ user, parsedData }) => {
       : "text-slate-500",
     
     button: isDark
-      ? "px-4 py-2 bg-amber-500 text-black font-black rounded-lg text-sm mb-4 disabled:opacity-60 disabled:cursor-not-allowed hover:bg-amber-400 transition-all duration-200"
-      : "px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-lg text-sm mb-4 disabled:opacity-60 disabled:cursor-not-allowed hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg",
+      ? "px-4 py-2 bg-blue-500 text-white font-black rounded-lg text-sm mb-4 disabled:opacity-60 disabled:cursor-not-allowed hover:bg-blue-400 transition-all duration-200"
+      : "px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-lg text-sm mb-4 disabled:opacity-60 disabled:cursor-not-allowed hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg",
     
-    // Loading styles
     loadingContainer: isDark
-      ? "mb-4 rounded-2xl border border-amber-500/20 bg-white/[0.02] p-5"
-      : "mb-4 rounded-2xl border border-indigo-200 bg-indigo-50/30 p-5",
+      ? "mb-4 rounded-2xl border border-blue-500/20 bg-white/[0.02] p-5"
+      : "mb-4 rounded-2xl border border-blue-200 bg-blue-50/30 p-5",
     
     loadingIconBorder: isDark
-      ? "border-amber-500/20 bg-amber-500/10"
-      : "border-indigo-200 bg-indigo-100",
+      ? "border-blue-500/20 bg-blue-500/10"
+      : "border-blue-200 bg-blue-100",
     
     loadingSpinner: isDark
-      ? "border-amber-500 border-t-transparent"
-      : "border-indigo-600 border-t-transparent",
+      ? "border-blue-500 border-t-transparent"
+      : "border-blue-600 border-t-transparent",
     
     loadingBadge: isDark
-      ? "text-amber-500"
-      : "text-indigo-600",
+      ? "text-blue-500"
+      : "text-blue-600",
     
     loadingSubBadge: isDark
       ? "text-slate-600"
@@ -122,51 +159,78 @@ const QuestionGenPanel = ({ user, parsedData }) => {
       : "text-slate-400",
     
     loadingCardBorder: (active) => isDark
-      ? active ? 'border-amber-500/30 bg-amber-500/10' : 'border-white/5 bg-white/[0.03]'
-      : active ? 'border-indigo-300 bg-indigo-100' : 'border-indigo-100 bg-white',
+      ? active ? 'border-blue-500/30 bg-blue-500/10' : 'border-white/5 bg-white/[0.03]'
+      : active ? 'border-blue-300 bg-blue-100' : 'border-blue-100 bg-white',
     
     loadingCardText: (active) => isDark
-      ? active ? 'text-amber-400' : 'text-slate-600'
-      : active ? 'text-indigo-600' : 'text-slate-400',
+      ? active ? 'text-blue-400' : 'text-slate-600'
+      : active ? 'text-blue-600' : 'text-slate-400',
     
     loadingCardBarBg: (active) => isDark
-      ? active ? 'bg-amber-500/20' : 'bg-white/5'
-      : active ? 'bg-indigo-200' : 'bg-indigo-100',
+      ? active ? 'bg-blue-500/20' : 'bg-white/5'
+      : active ? 'bg-blue-200' : 'bg-blue-100',
     
     loadingCardBarFill: isDark
-      ? "bg-amber-500"
-      : "bg-indigo-600",
+      ? "bg-blue-500"
+      : "bg-blue-600",
     
     loadingStepDot: (active) => isDark
-      ? active ? 'bg-amber-500 animate-pulse' : 'bg-white/10'
-      : active ? 'bg-indigo-600 animate-pulse' : 'bg-indigo-200',
+      ? active ? 'bg-blue-500 animate-pulse' : 'bg-white/10'
+      : active ? 'bg-blue-600 animate-pulse' : 'bg-blue-200',
     
     loadingStepText: isDark
       ? "text-slate-400"
       : "text-slate-500",
     
-    // Error styles
     errorText: isDark
       ? "text-red-400 text-sm mb-2 flex items-center gap-2"
       : "text-red-600 text-sm mb-2 flex items-center gap-2",
     
-    // Question styles
     questionContainer: isDark
-      ? "space-y-3 mt-3"
-      : "space-y-3 mt-3",
+      ? "space-y-2 mt-3"
+      : "space-y-2 mt-3",
     
-    questionCard: isDark
-      ? "p-4 bg-white/5 rounded-xl text-sm border border-white/5 hover:border-amber-500/20 transition-all duration-200"
-      : "p-4 bg-indigo-50/50 rounded-xl text-sm border border-indigo-100 hover:border-indigo-300 transition-all duration-200",
+    questionCard: (completed) => isDark
+      ? `p-3 rounded-xl text-sm border transition-all duration-200 cursor-pointer ${
+          completed 
+            ? 'bg-emerald-500/10 border-emerald-500/30' 
+            : 'bg-white/5 border-white/5 hover:border-blue-500/20 hover:bg-white/10'
+        }`
+      : `p-3 rounded-xl text-sm border transition-all duration-200 cursor-pointer ${
+          completed 
+            ? 'bg-emerald-50 border-emerald-200' 
+            : 'bg-blue-50/50 border-blue-100 hover:border-blue-300 hover:bg-blue-50'
+        }`,
     
-    questionTopic: isDark
-      ? "font-black text-xs uppercase text-slate-400 tracking-wider"
-      : "font-black text-xs uppercase text-indigo-600 tracking-wider",
+    questionTitle: (completed) => isDark
+      ? `font-bold text-base ${completed ? 'text-emerald-400 line-through' : 'text-white'}`
+      : `font-bold text-base ${completed ? 'text-emerald-600 line-through' : 'text-slate-800'}`,
     
-    questionText: isDark
-      ? "mt-2 text-sm text-slate-300"
-      : "mt-2 text-sm text-slate-700",
+    questionDifficulty: (difficulty) => {
+      const colors = {
+        easy: isDark ? 'text-emerald-400' : 'text-emerald-600',
+        medium: isDark ? 'text-yellow-400' : 'text-yellow-600',
+        hard: isDark ? 'text-red-400' : 'text-red-600'
+      };
+      return colors[difficulty] || colors.medium;
+    },
+    
+    progressBarBg: isDark
+      ? "bg-white/10"
+      : "bg-indigo-100",
+    
+    progressBarFill: isDark
+      ? "bg-emerald-500"
+      : "bg-emerald-500",
+    
+    evaluationCard: isDark
+      ? "mt-3 p-3 rounded-lg bg-white/5 border border-white/5"
+      : "mt-3 p-3 rounded-lg bg-gray-50 border border-gray-200",
   };
+
+  const stats = getCompletionStats();
+  const allCompleted = stats.total > 0 && stats.completed === stats.total;
+  const averageScore = getAverageScore();
 
   return (
     <motion.div
@@ -178,9 +242,9 @@ const QuestionGenPanel = ({ user, parsedData }) => {
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Sparkles size={16} className={T.loadingBadge} />
+            <Code size={16} className={T.loadingBadge} />
             <h4 className={`text-sm font-black uppercase tracking-[0.2em] ${T.headerText}`}>
-              Question Generator
+              Coding Practice
             </h4>
           </div>
           <div className="flex items-center gap-1">
@@ -192,136 +256,27 @@ const QuestionGenPanel = ({ user, parsedData }) => {
         </div>
         
         <p className={`text-xs ${T.description} mb-4`}>
-          Create targeted practice questions based on your profile, project depth, and target company fit.
+          Generate coding challenges based on your skill level. Click on any challenge to open the code editor.
         </p>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <button
-            onClick={handleGenerateNormal}
-            className={T.button}
-            disabled={loading}
-            title="Generate behavioral and conceptual interview questions"
-          >
-            {loading && currentType === 'normal' ? (
-              <span className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full border-2 ${T.loadingSpinner} animate-spin`} />
-                Generating...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2 justify-center">
-                <Brain size={14} />
-                <span className="text-center">Normal</span>
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={openCodingOptions}
-            className={T.button}
-            disabled={loading}
-            title="Open coding options"
-          >
-            {loading && currentType === 'coding' ? (
-              <span className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full border-2 ${T.loadingSpinner} animate-spin`} />
-                Generating...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2 justify-center">
-                <Code size={14} />
-                <span className="text-center">Coding</span>
-              </span>
-            )}
-          </button>
-        </div>
-
-        {showCodingOptions && (
-          <div className={`p-4 rounded-xl border ${isDark ? 'border-white/5 bg-white/[0.02]' : 'border-indigo-100 bg-white'} mb-4`}>
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="flex-1">
-                <label className="text-xs font-black uppercase tracking-wider mb-1">Language</label>
-                <select
-                  value={codingOptions.language}
-                  onChange={(e) => setCodingOptions({ ...codingOptions, language: e.target.value })}
-                  className="w-full p-2 rounded-md border"
-                  disabled={loading}
-                >
-                  <option value="javascript">JavaScript</option>
-                  <option value="python">Python</option>
-                  <option value="java">Java</option>
-                  <option value="cpp">C++</option>
-                </select>
-              </div>
-
-              <div className="w-36">
-                <label className="text-xs font-black uppercase tracking-wider mb-1">Difficulty</label>
-                <select
-                  value={codingOptions.difficulty}
-                  onChange={(e) => setCodingOptions({ ...codingOptions, difficulty: e.target.value })}
-                  className="w-full p-2 rounded-md border"
-                  disabled={loading}
-                >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
-              </div>
-
-              <div className="w-24">
-                <label className="text-xs font-black uppercase tracking-wider mb-1">Count</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={codingOptions.count}
-                  onChange={(e) => setCodingOptions({ ...codingOptions, count: Math.max(1, parseInt(e.target.value || '1')) })}
-                  className="w-full p-2 rounded-md border"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <div className="mt-3">
-              <label className="text-xs font-black uppercase tracking-wider mb-1">Topic (optional)</label>
-              <input
-                type="text"
-                placeholder="e.g. arrays, graphs, dynamic programming"
-                value={codingOptions.topic}
-                onChange={(e) => setCodingOptions({ ...codingOptions, topic: e.target.value })}
-                className="w-full p-2 rounded-md border"
-                disabled={loading}
-              />
-            </div>
-
-            <div className="mt-3 flex items-center gap-2">
-              <button
-                className={T.button}
-                onClick={handleConfirmGenerateCoding}
-                disabled={loading}
-              >
-                {loading && currentType === 'coding' ? (
-                  <span className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full border-2 ${T.loadingSpinner} animate-spin`} />
-                    Generating...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <Zap size={14} />
-                    Generate Coding
-                  </span>
-                )}
-              </button>
-
-              <button
-                className="px-3 py-2 rounded-md border bg-transparent text-sm"
-                onClick={() => setShowCodingOptions(false)}
-                disabled={loading}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Generate Button */}
+        <button
+          className={T.button}
+          onClick={handleGenerateCoding}
+          disabled={loading}
+        >
+          {loading && currentType === 'coding' ? (
+            <span className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full border-2 ${T.loadingSpinner} animate-spin`} />
+              Generating Challenges...
+            </span>
+          ) : (
+            <span className="flex items-center gap-2 justify-center">
+              <Zap size={14} />
+              Generate Coding Challenges
+            </span>
+          )}
+        </button>
 
         {loading && (
           <div className={T.loadingContainer}>
@@ -335,20 +290,20 @@ const QuestionGenPanel = ({ user, parsedData }) => {
                     AI Generation Running
                   </span>
                   <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${T.loadingSubBadge}`}>
-                    Estimated 40 to 50 seconds
+                    Estimated 30 to 40 seconds
                   </span>
                 </div>
                 <p className={`font-black text-sm mb-1 ${T.loadingTitle}`}>
                   {loadingStages[loadingStep]}
                 </p>
                 <p className={`text-xs ${T.loadingSubtext}`}>
-                  We are turning your resume and company match into interview-ready questions.
+                  Creating personalized coding challenges based on your skill level.
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-              {['Profile', 'Topics', 'Difficulty', 'Answer Style', 'Company Fit', 'Finalize'].map((label, index) => {
+              {['Skills', 'Topics', 'Difficulty', 'Test Cases', 'Constraints', 'Finalize'].map((label, index) => {
                 const active = index <= loadingStep;
                 return (
                   <div
@@ -370,24 +325,6 @@ const QuestionGenPanel = ({ user, parsedData }) => {
                 );
               })}
             </div>
-
-            <div className="space-y-2">
-              {[
-                'Reading your profile summary and target company',
-                'Detecting skills, projects, and experience signals',
-                'Choosing the most useful interview topics',
-                'Balancing technical, behavioral, and practical questions',
-                'Personalizing the set for your company match'
-              ].map((step, index) => (
-                <div key={step} className="flex items-center gap-3 text-xs font-medium">
-                  <div className={`w-2.5 h-2.5 rounded-full ${T.loadingStepDot(index <= loadingStep)}`} />
-                  <span className={T.loadingStepText}>{step}</span>
-                  {index <= loadingStep && (
-                    <CheckCircle size={10} className={T.loadingBadge} />
-                  )}
-                </div>
-              ))}
-            </div>
           </div>
         )}
 
@@ -400,39 +337,116 @@ const QuestionGenPanel = ({ user, parsedData }) => {
         
         {questions.length > 0 && (
           <div className={T.questionContainer}>
-            <div className="flex items-center gap-2 mb-3">
-              <BookOpen size={12} className={T.loadingBadge} />
-              <span className={`text-[9px] font-black uppercase tracking-wider ${T.loadingBadge}`}>
-                Generated Questions
-              </span>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <BookOpen size={12} className={T.loadingBadge} />
+                <span className={`text-[9px] font-black uppercase tracking-wider ${T.loadingBadge}`}>
+                  Coding Challenges
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                {averageScore && (
+                  <div className="flex items-center gap-2">
+                    <Trophy size={12} className={getScoreColor(averageScore)} />
+                    <span className={`text-xs font-black ${getScoreColor(averageScore)}`}>
+                      Avg Score: {averageScore}%
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] font-black ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    {stats.completed}/{stats.total} Completed
+                  </span>
+                  <div className={`w-16 h-1.5 rounded-full overflow-hidden ${T.progressBarBg}`}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${stats.percentage}%` }}
+                      transition={{ duration: 0.3 }}
+                      className={`h-full rounded-full ${T.progressBarFill}`}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            {questions.slice(0, 5).map((q, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className={T.questionCard}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className={T.questionTopic}>
-                      {q.topic || q.title || `Question ${i + 1}`}
-                    </div>
-                    <div className={T.questionText}>
-                      {q.question}
+
+            {questions.map((q, i) => {
+              const questionId = q.docId || q.id || `question_${i}`;
+              const isCompleted = completedQuestions[questionId];
+              const evaluation = evaluationResults[questionId];
+              
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  onClick={() => handleQuestionClick(q)}
+                  className={T.questionCard(isCompleted)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="flex-1">
+                        <div className={T.questionTitle(isCompleted)}>
+                          {q.title || `Challenge ${i + 1}`}
+                        </div>
+                      </div>
+                      <div className={`text-xs font-bold px-2 py-0.5 rounded ${T.questionDifficulty(q.difficulty)} bg-opacity-10 ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}>
+                        {q.difficulty || codingOptions.difficulty}
+                      </div>
+                      <ChevronRight size={16} className={isDark ? 'text-slate-600' : 'text-slate-400'} />
                     </div>
                   </div>
-                  <ChevronRight size={14} className={`${T.loadingBadge} opacity-50 ml-2 flex-shrink-0 mt-1`} />
-                </div>
-              </motion.div>
-            ))}
+
+                  {/* Evaluation Results (if completed) */}
+                  {evaluation && (
+                    <div className={T.evaluationCard}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Play size={14} className={getScoreColor(evaluation.score)} />
+                          <span className={`text-xs font-black ${getScoreColor(evaluation.score)}`}>
+                            Score: {evaluation.score}%
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {evaluation.executionTime && `⏱️ ${evaluation.executionTime}ms`}
+                        </div>
+                      </div>
+                      
+                      {evaluation.feedback && (
+                        <div className="text-xs mt-2 text-slate-400">
+                          <span className="font-bold">Feedback:</span> {evaluation.feedback}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
             
-            <div className={`mt-3 pt-2 flex items-center gap-2 ${isDark ? "border-t border-white/10" : "border-t border-indigo-100"}`}>
-              <TrendingUp size={12} className={T.loadingBadge} />
-              <span className={`text-[9px] font-black uppercase tracking-wider ${T.loadingBadge}`}>
-                {questions.length} questions ready for practice
-              </span>
+            <div className={`mt-3 pt-3 flex items-center justify-between ${isDark ? "border-t border-white/10" : "border-t border-indigo-100"}`}>
+              <div className="flex items-center gap-2">
+                <TrendingUp size={12} className={T.loadingBadge} />
+                <span className={`text-[9px] font-black uppercase tracking-wider ${T.loadingBadge}`}>
+                  {questions.length} challenges ready for coding
+                </span>
+              </div>
+              
+              {allCompleted && stats.total > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-center gap-2"
+                >
+                  <div className={`px-3 py-1.5 rounded-full ${
+                    isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
+                  }`}>
+                    <div className="flex items-center gap-2 text-xs font-black">
+                      <Trophy size={14} />
+                      <span>🎉 All Challenges Completed! Great job! 🎉</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </div>
         )}

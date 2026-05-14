@@ -5,6 +5,7 @@ import FeaturesSection from "../components/sections/FeaturesSection";
 import AboutSection from "../components/sections/AboutSection";
 import FooterSection from "../components/sections/FooterSection";
 import { useTheme } from "../context/ThemeContext";
+import VoiceAssistant from "../components/VoiceAssistant";
 
 const Landing = () => {
   const { isDark } = useTheme();
@@ -22,6 +23,7 @@ const Landing = () => {
         <AboutSection />
       </main>
       <FooterSection />
+      <VoiceAssistant />
     </div>
   );
 };

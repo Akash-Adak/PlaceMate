@@ -14,7 +14,7 @@ import Pricing from './pages/Pricing';
 import CompanyPlan from './pages/CompanyPlan';
 import PracticePlan from './pages/PracticePlan';
 import MockInterview from './pages/MockInterview';
-import VoiceAssistant from './components/VoiceAssistant';
+import CodeEditor from './pages/CodeEditor';
 
 function App() {
   return (
@@ -76,8 +76,15 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
+              <Route
+                path="/editor/:docId"
+                element={
+                  <ProtectedRoute>
+                    <CodeEditor />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
-            <VoiceAssistant />
           </div>
         </AuthProvider>
       </Router>
